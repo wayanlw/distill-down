@@ -8,6 +8,7 @@
     "icons": "node tools/make-icons.js"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.1",
     "jsdom": "^25.0.1"
   }
 }
