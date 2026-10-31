@@ -1,3 +1,4 @@
 node_modules/
 scratch/
-.handoff/test-results/
+.handoff/
+test-results/
