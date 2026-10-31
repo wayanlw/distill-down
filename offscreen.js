@@ -47,7 +47,7 @@ async function encodeImage(b64, mime) {
       URL.revokeObjectURL(url);
     }
   }
-  // The decoder has already run by now; this stops further work on oversized images.
+  // background.js checks the header first; this catches a header that understated the size.
   if (bmp.width * bmp.height > IMG_MAX_PIXELS) {
     bmp.close();
     throw new Error('image has too many pixels');

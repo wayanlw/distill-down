@@ -29,6 +29,27 @@ chrome.downloads.download = (options) => {
   return originalDownload(options);
 };
 
+// Count decode requests. Set self.__hangEncodes to n to make the next n never answer.
+self.__encodeCount = 0;
+self.__hangEncodes = 0;
+self.__offscreenCloses = 0;
+const originalOffscreenMessage = offscreenMessage;
+offscreenMessage = (msg) => {
+  if (msg.type === 'encodeImage') {
+    self.__encodeCount += 1;
+    if (self.__hangEncodes > 0) {
+      self.__hangEncodes -= 1;
+      return new Promise(() => {});
+    }
+  }
+  return originalOffscreenMessage(msg);
+};
+const originalClose = chrome.offscreen.closeDocument.bind(chrome.offscreen);
+chrome.offscreen.closeDocument = () => {
+  self.__offscreenCloses += 1;
+  return originalClose();
+};
+
 // Set self.__failDownloads to make every download report as interrupted.
 const originalSearch = chrome.downloads.search.bind(chrome.downloads);
 chrome.downloads.search = (query) =>
@@ -160,8 +181,28 @@ const PAGES = {
   }),
   '/hugeimage': page('WW Huge Image Page', MARKERS.image, {
     inside: '<p><img src="/huge.png" alt="Huge picture"></p>'
+  }),
+  '/redirectimage': page('WW Redirect Image Page', MARKERS.image, {
+    // In data-src so only the extension requests it; the browser would follow an ordinary src itself.
+    inside:
+      '<p><img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" data-src="/redirect.png" alt="Redirected picture"></p>'
+  }),
+  '/lazyuntouched': page('WW Lazy Untouched Page', MARKERS.image, {
+    inside:
+      '<p><img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" data-src="/big.png?from=never-displayed" alt="Lazy"></p>'
+  }),
+  '/hugedimensions': page('WW Huge Dimensions Page', MARKERS.image, {
+    inside: '<p><img src="/huge-dimensions.png" alt="Huge dimensions"></p>'
+  }),
+  '/twoimages': page('WW Two Images Page', MARKERS.image, {
+    inside: '<p><img src="/big.png?n=1" alt="First"></p><p><img src="/big.png?n=2" alt="Second"></p>'
   })
 };
+
+// Small file whose header claims 30000 x 30000 pixels.
+const HUGE_DIMENSIONS_PNG = Buffer.from(makePng(1, 1));
+HUGE_DIMENSIONS_PNG.writeUInt32BE(30000, 16);
+HUGE_DIMENSIONS_PNG.writeUInt32BE(30000, 20);
 
 const test = base.test.extend({
   extDir: [
@@ -185,6 +226,16 @@ const test = base.test.extend({
         if (route === '/big.png') {
           res.writeHead(200, { 'content-type': 'image/png', 'content-length': BIG_PNG.length });
           res.end(BIG_PNG);
+          return;
+        }
+        if (route === '/redirect.png') {
+          res.writeHead(302, { location: '/big.png?from=redirect' });
+          res.end();
+          return;
+        }
+        if (route === '/huge-dimensions.png') {
+          res.writeHead(200, { 'content-type': 'image/png' });
+          res.end(HUGE_DIMENSIONS_PNG);
           return;
         }
         // A body that never ends, with no declared size.

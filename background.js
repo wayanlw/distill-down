@@ -7,6 +7,7 @@ const NOTIFY_ICON = 'icons/icon128.png';
 const IMAGE_TIMEOUT_MS = 10000;
 const IMAGES_BUDGET_MS = 60000; // per page; no new image fetches start after this
 const IMAGE_MAX_BYTES = 15 * 1024 * 1024;
+const IMAGE_MAX_PIXELS = 40 * 1000 * 1000;
 const DOWNLOAD_TIMEOUT_MS = 5 * 60 * 1000; // long enough for a "save as" dialog
 
 let running = false;
@@ -108,6 +109,27 @@ function withTimeout(promise, ms, message) {
   return Promise.race([promise, limit]).finally(() => clearTimeout(timer));
 }
 
+// Decodes run one at a time. createImageBitmap cannot be cancelled, so a decode that
+// times out has its offscreen document closed before the next one starts.
+let encodeChain = Promise.resolve();
+
+function encodeImage(bytes, mime) {
+  const job = encodeChain.then(async () => {
+    try {
+      return await withTimeout(
+        offscreenMessage({ type: 'encodeImage', data: WW.bytesToBase64(bytes), mime }),
+        IMAGE_TIMEOUT_MS,
+        'image decode timed out'
+      );
+    } catch (err) {
+      await chrome.offscreen.closeDocument().catch(() => {});
+      throw err;
+    }
+  });
+  encodeChain = job.catch(() => {});
+  return job;
+}
+
 // Fetch each image (host permission allows cross-origin), encode as JPEG in the
 // offscreen document. Failures are left out of the map and fall back to text in pdf.js.
 // Image URLs are chosen by the page, so time, size and destination are all limited.
@@ -121,12 +143,8 @@ async function resolveImages(urls, pageUrl) {
         const timer = setTimeout(() => ctl.abort(), IMAGE_TIMEOUT_MS);
         try {
           if (!WW.isImageUrlAllowed(u, pageUrl)) throw new Error('private-network image from a public page');
-          const r = await fetch(u, { signal: ctl.signal, credentials: 'omit' });
-          // A redirect can land on a private address: the request has happened, but nothing is embedded.
-          if (!WW.isImageUrlAllowed(r.url, pageUrl)) {
-            ctl.abort();
-            throw new Error('redirected to a private-network image');
-          }
+          // Redirects are refused: a followed redirect would reach its destination before it could be checked.
+          const r = await fetch(u, { signal: ctl.signal, credentials: 'omit', redirect: 'error' });
           const type = r.headers.get('content-type') || '';
           // Some CDNs serve images as octet-stream; the decoder decides.
           if (!r.ok || !(type.startsWith('image/') || type.startsWith('application/octet-stream'))) {
@@ -136,11 +154,8 @@ async function resolveImages(urls, pageUrl) {
           // The timer keeps running here, so a body that never ends is cut off too.
           const buf = await WW.readBodyLimited(r, IMAGE_MAX_BYTES);
           clearTimeout(timer);
-          const res = await withTimeout(
-            offscreenMessage({ type: 'encodeImage', data: WW.bytesToBase64(buf), mime: type }),
-            IMAGE_TIMEOUT_MS,
-            'image decode timed out'
-          );
+          if (!WW.imageWithinPixelLimit(buf, IMAGE_MAX_PIXELS)) throw new Error('image too large or format not readable');
+          const res = await encodeImage(buf, type);
           if (res && res.ok) {
             map.set(u, { jpeg: WW.base64ToBytes(res.data), width: res.width, height: res.height });
           }

@@ -59,6 +59,40 @@ test('images on: an image over the byte limit is dropped and the PDF still saves
   expect(fs.readFileSync(file.filename).toString('latin1')).not.toContain('/Subtype /Image');
 });
 
+const PDF_IMAGES = { clipboard: false, download: true, format: 'pdf', content: 'cleaned', includeImages: true };
+
+test('a redirected image: the destination is never contacted and the PDF still saves', async ({ ext, site }) => {
+  await ext.setSettings(PDF_IMAGES);
+  const p = await ext.open('/redirectimage');
+  const note = await ext.run(p);
+  expect(note).toContain('Saved 1 page');
+  expect(site.requests).toContain('/redirect.png');
+  expect(site.requests.filter((r) => r.includes('from=redirect'))).toEqual([]);
+  const [file] = await ext.waitForDownloads(1);
+  expect(fs.readFileSync(file.filename).toString('latin1')).not.toContain('/Subtype /Image');
+});
+
+test('oversized dimensions are refused without ever reaching the decoder', async ({ ext }) => {
+  await ext.setSettings(PDF_IMAGES);
+  const p = await ext.open('/hugedimensions');
+  const note = await ext.run(p);
+  expect(note).toContain('Saved 1 page');
+  expect(await ext.worker.evaluate(() => self.__encodeCount)).toBe(0);
+});
+
+test('a stuck decode closes the offscreen document and the next image still embeds', async ({ ext }) => {
+  await ext.setSettings(PDF_IMAGES);
+  const p = await ext.open('/twoimages');
+  await ext.worker.evaluate(() => { self.__hangEncodes = 1; });
+  const note = await ext.run(p);
+  expect(note).toContain('Saved 1 page');
+  expect(await ext.worker.evaluate(() => self.__offscreenCloses)).toBe(1);
+  expect(await ext.worker.evaluate(() => self.__encodeCount)).toBe(2);
+  const [file] = await ext.waitForDownloads(1);
+  const pdf = fs.readFileSync(file.filename).toString('latin1');
+  expect(pdf.match(/\/Subtype \/Image/g)).toHaveLength(1);
+});
+
 test('source address: query removed by default, full and none on request', async ({ ext }) => {
   const p = await ext.open('/one?token=SECRET123');
 

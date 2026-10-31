@@ -41,6 +41,10 @@
       });
     };
 
+    // Output is built in an inert document. An <img> owned by the live page starts
+    // loading as soon as it has a src, even if it is never attached.
+    const inert = document.implementation.createHTMLDocument('');
+
     // Each mode runs on its own: one failing must not lose the other's result.
     const failures = [];
     if (modes.indexOf('cleaned') !== -1) {
@@ -49,7 +53,7 @@
         if (!article || !article.content) {
           throw new Error('Could not find main content on this page');
         }
-        const wrap = document.createElement('div');
+        const wrap = inert.createElement('div');
         wrap.innerHTML = article.content;
         absolutise(wrap);
         out.cleaned = td.turndown(wrap);
@@ -61,7 +65,7 @@
 
     if (modes.indexOf('full') !== -1) {
       try {
-        const body = document.body ? document.body.cloneNode(true) : document.createElement('div');
+        const body = document.body ? inert.importNode(document.body, true) : inert.createElement('div');
         absolutise(body);
         out.full = td.turndown(body);
       } catch (err) {
