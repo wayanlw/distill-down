@@ -130,6 +130,9 @@ async function extractTab(tab, modes) {
 // Chrome shows a "debugging this browser" banner while attached.
 async function printTabToPdf(tab) {
   if (WW.isRestrictedUrl(tab.url)) throw new WW.SkipError('restricted page (cannot print)');
+  // "debugger" is an optional permission, granted from the options page.
+  const granted = await chrome.permissions.contains({ permissions: ['debugger'] });
+  if (!granted) throw new WW.SkipError('Page print needs the debugger permission: choose Page print in settings again');
   const target = { tabId: tab.id };
   try {
     await chrome.debugger.attach(target, '1.3');

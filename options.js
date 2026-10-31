@@ -54,7 +54,29 @@ async function save() {
 }
 
 // Every change saves at once; the Save button stays as a manual fallback.
-for (const el of document.querySelectorAll('input, select')) el.addEventListener('change', save);
+for (const el of document.querySelectorAll('input, select')) {
+  if (el.id !== 'content') el.addEventListener('change', save);
+}
+
+// Page print needs the optional "debugger" permission. Ask for it here, on the click
+// that chooses Page print (permissions.request needs a user gesture). Declined: go back to Cleaned.
+$('content').addEventListener('change', async () => {
+  let denied = false;
+  if ($('content').value === 'print') {
+    let granted = false;
+    try {
+      granted = await chrome.permissions.request({ permissions: ['debugger'] });
+    } catch (e) {
+      granted = false;
+    }
+    if (!granted) {
+      $('content').value = 'cleaned';
+      denied = true;
+    }
+  }
+  await save();
+  if (denied) $('status').textContent = 'Page print needs the debugger permission';
+});
 $('save').addEventListener('click', save);
 $('reset').addEventListener('click', async () => {
   applyForm(WW.sanitiseSettings({}));

@@ -55,6 +55,13 @@ function buildExtensionCopy() {
     if (!wanted || NOT_EXTENSION.has(name)) continue;
     fs.cpSync(src, path.join(dir, name), { recursive: true });
   }
+  // Playwright cannot click Chrome's permission prompt, so the copy declares the optional
+  // "debugger" permission as granted. The repo's manifest keeps it optional.
+  const mpath = path.join(dir, 'manifest.json');
+  const manifest = JSON.parse(fs.readFileSync(mpath, 'utf8'));
+  manifest.permissions = manifest.permissions.concat(manifest.optional_permissions || []);
+  delete manifest.optional_permissions;
+  fs.writeFileSync(mpath, JSON.stringify(manifest, null, 2));
   fs.renameSync(path.join(dir, 'background.js'), path.join(dir, 'background.original.js'));
   fs.writeFileSync(path.join(dir, 'background.js'), HARNESS);
   return dir;
