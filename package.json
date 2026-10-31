@@ -1,0 +1,13 @@
+{
+  "name": "ww-chrome-ai-addon",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Chrome MV3 extension: save highlighted tabs as Markdown/PDF and copy to clipboard",
+  "scripts": {
+    "test": "node --test tests/",
+    "icons": "node tools/make-icons.js"
+  },
+  "devDependencies": {
+    "jsdom": "^25.0.1"
+  }
+}

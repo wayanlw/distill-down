@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>ww-chrome-ai-addon settings</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 560px; margin: 24px auto; padding: 0 16px; color: #222; }
+      h1 { font-size: 20px; }
+      h2 { font-size: 15px; margin-top: 28px; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
+      .row { display: flex; align-items: center; justify-content: space-between; margin: 12px 0; gap: 12px; }
+      .row label { flex: 1; }
+      .hint { color: #666; font-size: 12px; margin: -6px 0 12px; }
+      .sub { padding-left: 16px; border-left: 3px solid #eee; }
+      .sub.off { opacity: 0.4; }
+      select, input[type=text] { min-width: 220px; padding: 4px; }
+      button { margin-top: 20px; padding: 6px 16px; }
+      #status { margin-left: 12px; color: #2a7; }
+    </style>
+  </head>
+  <body>
+    <h1>Settings</h1>
+
+    <h2>Clipboard</h2>
+    <div class="row">
+      <label for="clipboard">Copy to clipboard</label>
+      <input type="checkbox" id="clipboard">
+    </div>
+    <div class="hint">Copies one combined Markdown text (Cleaned). Always Markdown.</div>
+
+    <h2>Download</h2>
+    <div class="row">
+      <label for="download">Download files</label>
+      <input type="checkbox" id="download">
+    </div>
+    <div id="downloadSub" class="sub">
+      <div class="row">
+        <label for="format">Format</label>
+        <select id="format">
+          <option value="markdown">Markdown</option>
+          <option value="pdf">PDF</option>
+        </select>
+      </div>
+      <div class="row">
+        <label for="content">Content</label>
+        <select id="content">
+          <option value="cleaned">Cleaned (main content only)</option>
+          <option value="full">Full (entire page, for debugging)</option>
+        </select>
+      </div>
+      <div class="hint">Applies to Markdown and PDF downloads. Not the clipboard.</div>
+      <div class="row">
+        <label for="destination">Destination folder (inside Downloads)</label>
+        <input type="text" id="destination" placeholder="AI-Captures">
+      </div>
+    </div>
+
+    <button id="save">Save</button><span id="status"></span>
+
+    <script src="options.js"></script>
+  </body>
+</html>

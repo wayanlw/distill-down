@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "ww-chrome-ai-addon",
+  "version": "0.1.0",
+  "description": "One click saves highlighted tabs as Markdown or PDF and/or copies them to the clipboard for AI tools.",
+  "minimum_chrome_version": "116",
+  "permissions": ["tabs", "scripting", "downloads", "notifications", "storage", "offscreen"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Save highlighted tabs"
+  },
+  "options_page": "options.html",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
