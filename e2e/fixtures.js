@@ -71,19 +71,64 @@ function filler(n) {
 
 function page(title, marker, extra) {
   return `<!doctype html><html><head><title>${title}</title></head><body>
-${(extra && extra.before) || ''}<article><h1>${title}</h1><p>${marker}</p>${filler(8)}</article>${(extra && extra.after) || ''}
+${(extra && extra.before) || ''}<article><h1>${title}</h1><p>${marker}</p>${filler(8)}${(extra && extra.inside) || ''}</article>${(extra && extra.after) || ''}
 </body></html>`;
 }
+
+// Dependency-free RGB PNG (gradient). Wider than the 1000 px the extension downscales to.
+function makePng(width, height) {
+  const zlib = require('zlib');
+  const chunk = (type, data) => {
+    const head = Buffer.alloc(4);
+    head.writeUInt32BE(data.length);
+    const body = Buffer.concat([Buffer.from(type, 'ascii'), data]);
+    const crc = Buffer.alloc(4);
+    crc.writeUInt32BE(zlib.crc32(body));
+    return Buffer.concat([head, body, crc]);
+  };
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(width, 0);
+  ihdr.writeUInt32BE(height, 4);
+  ihdr[8] = 8; // bit depth
+  ihdr[9] = 2; // RGB
+  const raw = Buffer.alloc((width * 3 + 1) * height);
+  let o = 0;
+  for (let y = 0; y < height; y++) {
+    raw[o++] = 0; // filter: none
+    for (let x = 0; x < width; x++) {
+      raw[o++] = x % 256;
+      raw[o++] = y % 256;
+      raw[o++] = (x + y) % 256;
+    }
+  }
+  return Buffer.concat([
+    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    chunk('IHDR', ihdr),
+    chunk('IDAT', zlib.deflateSync(raw)),
+    chunk('IEND', Buffer.alloc(0))
+  ]);
+}
+
+const IMAGE_WIDTH = 2000;
+const BIG_PNG = makePng(IMAGE_WIDTH, 1000);
 
 const MARKERS = {
   one: 'WW marker sentence number one.',
   two: 'WW marker sentence number two.',
-  nav: 'WW marker sentence for the navigation page.'
+  nav: 'WW marker sentence for the navigation page.',
+  image: 'WW marker sentence for the image page.',
+  broken: 'WW marker sentence for the broken image page.'
 };
 
 const PAGES = {
   '/one': page('WW Page One', MARKERS.one),
   '/two': page('WW Page Two', MARKERS.two),
+  '/image': page('WW Image Page', MARKERS.image, {
+    inside: '<p><img src="/big.png" alt="Big gradient"></p>'
+  }),
+  '/brokenimage': page('WW Broken Image Page', MARKERS.broken, {
+    inside: '<p><img src="/missing.png" alt="Missing picture"></p>'
+  }),
   '/nav': page('WW Nav Page', MARKERS.nav, {
     before: '<nav><ul><li><a href="/x">NAVTEXT-MENU-ITEM</a></li><li><a href="/y">NAVTEXT-OTHER</a></li></ul></nav>',
     after: '<footer><p>FOOTERTEXT-COPYRIGHT</p></footer>'
@@ -105,7 +150,13 @@ const test = base.test.extend({
     // eslint-disable-next-line no-empty-pattern
     async ({}, use) => {
       const server = http.createServer((req, res) => {
-        const body = PAGES[req.url.split('?')[0]];
+        const route = req.url.split('?')[0];
+        if (route === '/big.png') {
+          res.writeHead(200, { 'content-type': 'image/png', 'content-length': BIG_PNG.length });
+          res.end(BIG_PNG);
+          return;
+        }
+        const body = PAGES[route];
         res.writeHead(body ? 200 : 404, { 'content-type': 'text/html; charset=utf-8' });
         res.end(body || 'not found');
       });
@@ -186,4 +237,4 @@ const test = base.test.extend({
   }
 });
 
-module.exports = { test, expect, MARKERS };
+module.exports = { test, expect, MARKERS, IMAGE_WIDTH };
