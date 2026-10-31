@@ -21,9 +21,11 @@ function applyForm(s) {
   $('destination').value = s.destination;
   $('includeLinks').checked = s.includeLinks;
   $('includeImages').checked = s.includeImages;
-  // Page print only exists for PDF.
+  // Page print exists only for PDF; Full only for Markdown.
   const printOpt = $('content').querySelector('option[value="print"]');
   printOpt.disabled = printOpt.hidden = s.format !== 'pdf';
+  const fullOpt = $('content').querySelector('option[value="full"]');
+  fullOpt.disabled = fullOpt.hidden = s.format !== 'markdown';
   const sub = $('downloadSub');
   sub.classList.toggle('off', !s.download);
   for (const el of sub.querySelectorAll('select, input')) el.disabled = !s.download;

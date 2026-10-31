@@ -22,8 +22,8 @@ test('image is embedded as a JPEG no wider than 1000 px', async ({ ext }) => {
   expect(width).toBe(1000);
 });
 
-test('Full mode embeds a lazy-loaded image from data-src', async ({ ext }) => {
-  await ext.setSettings({ clipboard: false, download: true, format: 'pdf', content: 'full', includeImages: true });
+test('Cleaned PDF embeds a lazy-loaded image from data-src', async ({ ext }) => {
+  await ext.setSettings({ clipboard: false, download: true, format: 'pdf', content: 'cleaned', includeImages: true });
   const p = await ext.open('/lazyimage');
   await ext.run(p);
   const [file] = await ext.waitForDownloads(1);

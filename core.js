@@ -7,7 +7,7 @@
     clipboard: true,
     download: false,
     format: 'markdown', // 'markdown' | 'pdf'
-    content: 'cleaned', // 'cleaned' | 'full' | 'print' (print only with format 'pdf': browser print-to-PDF)
+    content: 'cleaned', // 'cleaned' | 'full' (markdown only) | 'print' (pdf only: browser print-to-PDF)
     destination: 'AI-Captures',
     includeLinks: false, // false keeps link text, drops the URL (Markdown, clipboard, text PDF)
     includeImages: false // false turns images into [Image: alt]; no pictures in text PDF
@@ -122,8 +122,11 @@
       s.content = 'print';
     }
     if (s.format !== 'markdown' && s.format !== 'pdf') s.format = DEFAULT_SETTINGS.format;
+    // PDF has no Full: Markdown Full covers debugging, Page print covers the whole page.
+    // A saved PDF + Full falls back to Cleaned.
     const printOk = s.content === 'print' && s.format === 'pdf';
-    if (s.content !== 'cleaned' && s.content !== 'full' && !printOk) s.content = DEFAULT_SETTINGS.content;
+    const fullOk = s.content === 'full' && s.format === 'markdown';
+    if (s.content !== 'cleaned' && !fullOk && !printOk) s.content = DEFAULT_SETTINGS.content;
     // An explicit empty string means "save straight into Downloads".
     s.destination = s.destination === '' ? '' : sanitiseDestination(s.destination);
     return s;

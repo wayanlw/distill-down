@@ -64,6 +64,9 @@ test('destination sanitising keeps it inside Downloads', () => {
   assert.equal(WW.sanitiseSettings({ format: 'print' }).content, 'print');
   assert.equal(WW.sanitiseSettings({ format: 'print' }).format, 'pdf');
   assert.equal(WW.sanitiseSettings({ format: 'bogus' }).format, 'markdown');
+  // Full is Markdown-only; a saved PDF + Full falls back to Cleaned.
+  assert.equal(WW.sanitiseSettings({ format: 'markdown', content: 'full' }).content, 'full');
+  assert.equal(WW.sanitiseSettings({ format: 'pdf', content: 'full' }).content, 'cleaned');
 });
 
 test('settings sanitising applies defaults and rejects bad values', () => {
