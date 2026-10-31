@@ -2,72 +2,200 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>ww-chrome-ai-addon settings</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Distill Down settings</title>
     <style>
-      body { font-family: system-ui, sans-serif; max-width: 560px; margin: 24px auto; padding: 0 16px; color: #222; }
-      h1 { font-size: 20px; }
-      h2 { font-size: 15px; margin-top: 28px; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
-      .row { display: flex; align-items: center; justify-content: space-between; margin: 12px 0; gap: 12px; }
-      .row label { flex: 1; }
-      .hint { color: #666; font-size: 12px; margin: -6px 0 12px; }
-      .sub { padding-left: 16px; border-left: 3px solid #eee; }
+      :root {
+        --ink: #1c1b3a;
+        --amber: #f5a623;
+        --amber-deep: #b36f00;
+        --bg: #faf7f2;
+        --card: #ffffff;
+        --text: #1c1b3a;
+        --muted: #5f5d78;
+        --line: #e6e1d8;
+        --track: #a39fbf;
+        --focus: #1c1b3a;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #121127;
+          --card: #1c1b3a;
+          --text: #f3f0ea;
+          --muted: #a9a7c4;
+          --line: #2f2e55;
+          --track: #3d3c66;
+          --amber-deep: #f5a623;
+          --focus: #f5a623;
+        }
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+      }
+      main { max-width: 600px; margin: 0 auto; padding: 32px 16px 48px; }
+
+      header { display: flex; align-items: center; gap: 16px; margin-bottom: 28px; }
+      header img { width: 56px; height: 56px; border-radius: 14px; }
+      h1 { font-size: 24px; line-height: 1.2; margin: 0; letter-spacing: -0.01em; }
+      .tagline { margin: 2px 0 0; color: var(--muted); }
+      .tagline b { color: var(--amber-deep); font-weight: 600; }
+
+      section {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 4px 20px 16px;
+        margin-bottom: 16px;
+      }
+      h2 {
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+        margin: 16px 0 4px;
+      }
+      .row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 10px 0; }
+      .row label { flex: 1; font-weight: 500; }
+      .hint { color: var(--muted); font-size: 12px; margin: 0 0 4px; }
+      .sub { margin-top: 4px; padding-left: 16px; border-left: 3px solid var(--amber); transition: opacity 0.15s; }
       .sub.off { opacity: 0.4; }
-      select, input[type=text] { min-width: 220px; padding: 4px; }
-      button { margin-top: 20px; padding: 6px 16px; }
-      #status { margin-left: 12px; color: #2a7; }
+
+      select, input[type=text] {
+        min-width: 240px;
+        padding: 7px 10px;
+        font: inherit;
+        color: var(--text);
+        background: var(--bg);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+      }
+      input[type=text]::placeholder { color: var(--muted); }
+      select:focus-visible, input:focus-visible, button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+      /* Toggle switch: still a real checkbox, so keyboard and the options script work unchanged. */
+      input[type=checkbox] {
+        appearance: none;
+        flex: none;
+        position: relative;
+        width: 40px;
+        height: 24px;
+        margin: 0;
+        border-radius: 12px;
+        background: var(--track);
+        cursor: pointer;
+        transition: background 0.15s;
+      }
+      input[type=checkbox]::after {
+        content: "";
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: #fff;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        transition: transform 0.15s;
+      }
+      input[type=checkbox]:checked { background: var(--amber); }
+      input[type=checkbox]:checked::after { transform: translateX(16px); }
+      input[type=checkbox]:disabled { cursor: default; }
+
+      .actions { display: flex; align-items: center; gap: 12px; margin-top: 24px; }
+      button {
+        padding: 9px 20px;
+        font: inherit;
+        font-weight: 600;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+      #save { background: var(--ink); color: #faf7f2; border: 1px solid var(--ink); }
+      @media (prefers-color-scheme: dark) { #save { background: var(--amber); color: #1c1b3a; border-color: var(--amber); } }
+      #reset { background: transparent; color: var(--text); border: 1px solid var(--line); }
+      #status { color: var(--amber-deep); font-weight: 500; }
+      footer { margin-top: 32px; color: var(--muted); font-size: 12px; }
+
+      @media (max-width: 480px) {
+        .row { flex-wrap: wrap; }
+        select, input[type=text] { min-width: 0; width: 100%; }
+      }
     </style>
   </head>
   <body>
-    <h1>Settings</h1>
+    <main>
+      <header>
+        <img src="icons/icon128.png" alt="">
+        <div>
+          <h1>Distill Down</h1>
+          <p class="tagline">Tabs in, clean text out. <b>Do distill.</b></p>
+        </div>
+      </header>
 
-    <h2>Clipboard</h2>
-    <div class="row">
-      <label for="clipboard">Copy to clipboard</label>
-      <input type="checkbox" id="clipboard">
-    </div>
-    <div class="hint">Copies one combined Markdown text (Cleaned). Always Markdown.</div>
+      <section>
+        <h2>Clipboard</h2>
+        <div class="row">
+          <label for="clipboard">Copy to clipboard</label>
+          <input type="checkbox" id="clipboard">
+        </div>
+        <p class="hint">Copies one combined Markdown text (Cleaned). Always Markdown.</p>
+      </section>
 
-    <h2>Links and images in text</h2>
-    <div class="row">
-      <label for="includeLinks">Include link URLs</label>
-      <input type="checkbox" id="includeLinks">
-    </div>
-    <div class="row">
-      <label for="includeImages">Include image URLs</label>
-      <input type="checkbox" id="includeImages">
-    </div>
-    <div class="hint">Off keeps the link text and drops the address; images become [Image: description]. In a PDF, off also means no pictures are embedded. Does not affect Page print.</div>
+      <section>
+        <h2>Links and images in text</h2>
+        <div class="row">
+          <label for="includeLinks">Include link URLs</label>
+          <input type="checkbox" id="includeLinks">
+        </div>
+        <div class="row">
+          <label for="includeImages">Include image URLs</label>
+          <input type="checkbox" id="includeImages">
+        </div>
+        <p class="hint">Off keeps the link text and drops the address; images become [Image: description]. In a PDF, off also means no pictures are embedded. Does not affect Page print.</p>
+      </section>
 
-    <h2>Download</h2>
-    <div class="row">
-      <label for="download">Download files</label>
-      <input type="checkbox" id="download">
-    </div>
-    <div id="downloadSub" class="sub">
-      <div class="row">
-        <label for="format">Format</label>
-        <select id="format">
-          <option value="markdown">Markdown</option>
-          <option value="pdf">PDF</option>
-        </select>
+      <section>
+        <h2>Download</h2>
+        <div class="row">
+          <label for="download">Download files</label>
+          <input type="checkbox" id="download">
+        </div>
+        <div id="downloadSub" class="sub">
+          <div class="row">
+            <label for="format">Format</label>
+            <select id="format">
+              <option value="markdown">Markdown</option>
+              <option value="pdf">PDF</option>
+            </select>
+          </div>
+          <div class="row">
+            <label for="content">Content</label>
+            <select id="content">
+              <option value="cleaned">Cleaned (main content only)</option>
+              <option value="full">Full (entire page, Markdown only)</option>
+              <option value="print">Page print (as the browser prints it, PDF only)</option>
+            </select>
+          </div>
+          <p class="hint">Not used for the clipboard, which is always Cleaned. Page print shows a brief "debugging this browser" banner.</p>
+          <div class="row">
+            <label for="destination">Destination folder (inside Downloads)</label>
+            <input type="text" id="destination" placeholder="DD-Captures">
+          </div>
+        </div>
+      </section>
+
+      <div class="actions">
+        <button id="save">Save</button>
+        <button id="reset" type="button">Restore defaults</button>
+        <span id="status" role="status"></span>
       </div>
-      <div class="row">
-        <label for="content">Content</label>
-        <select id="content">
-          <option value="cleaned">Cleaned (main content only)</option>
-          <option value="full">Full (entire page, Markdown only)</option>
-          <option value="print">Page print (as the browser prints it, PDF only)</option>
-        </select>
-      </div>
-      <div class="hint">Not used for the clipboard, which is always Cleaned. Page print shows a brief "debugging this browser" banner.</div>
-      <div class="row">
-        <label for="destination">Destination folder (inside Downloads)</label>
-        <input type="text" id="destination" placeholder="AI-Captures">
-      </div>
-    </div>
 
-    <button id="save">Save</button>
-    <button id="reset" type="button">Restore defaults</button><span id="status"></span>
+      <footer>Everything runs in your browser. Distill Down never sends your pages anywhere.</footer>
+    </main>
 
     <script src="core.js"></script>
     <script src="options.js"></script>

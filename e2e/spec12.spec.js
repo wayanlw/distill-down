@@ -10,7 +10,7 @@ test('1. single tab, Markdown download only', async ({ ext }) => {
   expect(note).toMatch(/^Saved 1 page \(1 file\)\./);
 
   const [file] = await ext.waitForDownloads(1);
-  expect(file.requested).toMatch(/^AI-Captures\/\d{8}_\d{6}_WW Page One\.md$/);
+  expect(file.requested).toMatch(/^DD-Captures\/\d{8}_\d{6}_WW Page One\.md$/);
   const text = fs.readFileSync(file.filename, 'utf8');
   expect(text).toContain('# WW Page One');
   expect(text).toContain(MARKERS.one);
@@ -37,7 +37,7 @@ test('3. both on, PDF format', async ({ ext }) => {
   expect(note).toMatch(/^Saved 1 page \(1 file\), copied 1 page to clipboard\./);
 
   const [file] = await ext.waitForDownloads(1);
-  expect(file.requested).toMatch(/^AI-Captures\/\d{8}_\d{6}_WW Page One\.pdf$/);
+  expect(file.requested).toMatch(/^DD-Captures\/\d{8}_\d{6}_WW Page One\.pdf$/);
   const bytes = fs.readFileSync(file.filename);
   expect(bytes.subarray(0, 5).toString('latin1')).toBe('%PDF-');
   expect(await ext.readClipboard(p)).toContain(MARKERS.one);

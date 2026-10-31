@@ -19,7 +19,7 @@ function notify(message) {
   chrome.notifications.create(id, {
     type: 'basic',
     iconUrl: NOTIFY_ICON,
-    title: 'ww-chrome-ai-addon',
+    title: 'Distill Down',
     message: String(message)
   });
 }

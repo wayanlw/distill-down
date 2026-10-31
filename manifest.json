@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "ww-chrome-ai-addon",
+  "name": "Distill Down: tabs to clean Markdown & PDF",
   "version": "0.1.0",
-  "description": "One click saves highlighted tabs as Markdown or PDF and/or copies them to the clipboard for AI tools.",
+  "description": "Turn highlighted tabs into clean Markdown or PDF, saved or copied for your AI tools. Runs in your browser; nothing is sent anywhere.",
   "minimum_chrome_version": "116",
   "permissions": ["tabs", "scripting", "downloads", "notifications", "storage", "offscreen", "clipboardWrite"],
   "optional_permissions": ["debugger"],
@@ -11,7 +11,7 @@
     "service_worker": "background.js"
   },
   "action": {
-    "default_title": "Save highlighted tabs"
+    "default_title": "Distill highlighted tabs"
   },
   "options_page": "options.html",
   "icons": {

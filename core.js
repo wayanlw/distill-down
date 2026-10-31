@@ -8,7 +8,7 @@
     download: false,
     format: 'markdown', // 'markdown' | 'pdf'
     content: 'cleaned', // 'cleaned' | 'full' (markdown only) | 'print' (pdf only: browser print-to-PDF)
-    destination: 'AI-Captures',
+    destination: 'DD-Captures',
     includeLinks: false, // false keeps link text, drops the URL (Markdown, clipboard, text PDF)
     includeImages: false // false turns images into [Image: alt]; no pictures in text PDF
   });

@@ -50,10 +50,10 @@ test('collision suffix _2, _3 (case-insensitive)', () => {
 });
 
 test('destination sanitising keeps it inside Downloads', () => {
-  assert.equal(WW.sanitiseDestination('AI-Captures'), 'AI-Captures');
+  assert.equal(WW.sanitiseDestination('DD-Captures'), 'DD-Captures');
   assert.equal(WW.sanitiseDestination('/etc/../x\\y'), 'etc/x/y');
-  assert.equal(WW.sanitiseDestination('..'), 'AI-Captures');
-  assert.equal(WW.sanitiseDestination(''), 'AI-Captures');
+  assert.equal(WW.sanitiseDestination('..'), 'DD-Captures');
+  assert.equal(WW.sanitiseDestination(''), 'DD-Captures');
   assert.equal(WW.sanitiseSettings({ destination: '' }).destination, '');
   assert.deepEqual(
     (({ format, content }) => ({ format, content }))(WW.sanitiseSettings({ format: 'pdf', content: 'print' })),
@@ -75,7 +75,7 @@ test('settings sanitising applies defaults and rejects bad values', () => {
   assert.equal(s.content, 'cleaned');
   assert.equal(s.clipboard, true);
   assert.equal(s.download, false);
-  assert.equal(s.destination, 'AI-Captures');
+  assert.equal(s.destination, 'DD-Captures');
 });
 
 test('defaults suit AI use: clipboard on, download off, no link or image URLs', () => {
