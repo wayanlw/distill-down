@@ -44,6 +44,7 @@ async function save() {
   setTimeout(() => ($('status').textContent = ''), 1500);
 }
 
-$('download').addEventListener('change', () => applyForm(readForm()));
+// Every change saves at once; the Save button stays as a manual fallback.
+for (const el of document.querySelectorAll('input, select')) el.addEventListener('change', save);
 $('save').addEventListener('click', save);
 load();
