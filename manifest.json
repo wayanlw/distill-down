@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "description": "One click saves highlighted tabs as Markdown or PDF and/or copies them to the clipboard for AI tools.",
   "minimum_chrome_version": "116",
-  "permissions": ["tabs", "scripting", "downloads", "notifications", "storage", "offscreen"],
+  "permissions": ["tabs", "scripting", "downloads", "notifications", "storage", "offscreen", "clipboardWrite"],
   "host_permissions": ["<all_urls>"],
   "background": {
     "service_worker": "background.js"

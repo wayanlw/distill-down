@@ -178,7 +178,9 @@ async function run(activeTab) {
     if (behaviour.clipboard) {
       try {
         const clipPages = extracted.filter((p) => p.cleaned);
-        await copyToClipboard(WW.buildClipboardText(clipPages));
+        await copyToClipboard(
+          WW.buildClipboardText(clipPages.map((p) => ({ title: p.title, url: p.url, markdown: p.cleaned })))
+        );
         pagesCopied = clipPages.length;
       } catch (err) {
         console.error('[ww] clipboard failed', err);
