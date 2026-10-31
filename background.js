@@ -192,7 +192,7 @@ async function run(activeTab) {
     if (behaviour.download) {
       const stamp = WW.timestamp(new Date());
       const taken = new Set();
-      const dest = settings.destination;
+      const dest = settings.destination ? settings.destination + '/' : '';
       const pages = extracted.filter((p) => p.content);
       if (pages.length < extracted.length) {
         for (const p of extracted.filter((x) => !x.content)) {
@@ -209,7 +209,7 @@ async function run(activeTab) {
                 : stamp + '_' + pages.length + '-pages';
             const name = WW.uniqueBase(base, taken) + '.md';
             const text = WW.buildMarkdownFile(pages.map((p) => ({ title: p.title, url: p.url, markdown: p.content })));
-            await downloadBytes(WW.utf8Bytes(text), 'text/markdown', dest + '/' + name);
+            await downloadBytes(WW.utf8Bytes(text), 'text/markdown', dest + name);
             pagesSaved += pages.length;
             filesSaved += 1;
           } catch (err) {
@@ -223,7 +223,7 @@ async function run(activeTab) {
             const name = WW.uniqueBase(stamp + '_' + WW.sanitiseTitle(p.title), taken) + '.pdf';
             const images = await resolveImages(WWPdf.collectImageUrls(p.content));
             const bytes = await WWPdf.buildPdf(p.title, p.url, p.content, images);
-            await downloadBytes(bytes, 'application/pdf', dest + '/' + name);
+            await downloadBytes(bytes, 'application/pdf', dest + name);
             pagesSaved += 1;
             filesSaved += 1;
           } catch (err) {

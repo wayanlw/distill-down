@@ -54,6 +54,7 @@ test('destination sanitising keeps it inside Downloads', () => {
   assert.equal(WW.sanitiseDestination('/etc/../x\\y'), 'etc/x/y');
   assert.equal(WW.sanitiseDestination('..'), 'AI-Captures');
   assert.equal(WW.sanitiseDestination(''), 'AI-Captures');
+  assert.equal(WW.sanitiseSettings({ destination: '' }).destination, '');
 });
 
 test('settings sanitising applies defaults and rejects bad values', () => {

@@ -114,7 +114,8 @@
     s.download = !!s.download;
     if (s.format !== 'markdown' && s.format !== 'pdf') s.format = DEFAULT_SETTINGS.format;
     if (s.content !== 'cleaned' && s.content !== 'full') s.content = DEFAULT_SETTINGS.content;
-    s.destination = sanitiseDestination(s.destination);
+    // An explicit empty string means "save straight into Downloads".
+    s.destination = s.destination === '' ? '' : sanitiseDestination(s.destination);
     return s;
   }
 
