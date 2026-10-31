@@ -6,7 +6,7 @@ Fields are copy-ready. Limits are the store's. Nothing here has been submitted.
 Distill Down: tabs to clean Markdown & PDF
 
 ## Summary (max 132, same as manifest description)
-Turn highlighted tabs into clean Markdown or PDF, saved or copied for your AI tools. Runs in your browser; nothing is sent anywhere.
+Turn highlighted tabs into clean Markdown or PDF for your AI tools. Converted locally; PDFs with images contact image hosts.
 
 ## Category
 Productivity
@@ -22,10 +22,14 @@ WHY IT'S USEFUL
 • Clean by default: only the article or main content, so the AI reads what matters and your token budget isn't wasted on navigation.
 • Your choice of output: clipboard, a Markdown file, a cleaned PDF with pictures, or a full page print.
 • Links and image addresses are optional. Leave them out for tight text, or keep them when sources matter.
-• Every page keeps its title and source address, so you always know where text came from.
+• Every page keeps its title and, unless you turn it off, its source address. Query strings and fragments are removed by default.
 
 PRIVATE BY DESIGN
-Everything runs in your browser. Distill Down has no account, no analytics, and makes no requests to any AI service. It reads only the tabs you highlight, only when you click.
+Pages are converted in your browser. Distill Down has no account, no analytics, and makes no requests to any AI service. It reads only the tabs you highlight, only when you click. The one network use is optional: a PDF with images downloads those images from the sites that host them.
+
+GOOD TO KNOW
+• "Cleaned" means page clutter is removed, not that the text is safe. A page can contain instructions aimed at an AI, including text you can't see on screen. Treat pasted web content as untrusted.
+• Cleaned PDF supports Western European characters; others print as "?". Use Page print for other scripts or mathematical notation.
 
 SET IT UP IN SECONDS
 Open the options page to turn clipboard and download on or off, choose Markdown or PDF, and pick a folder inside Downloads. "Restore defaults" puts everything back.
@@ -58,6 +62,6 @@ Host PRIVACY.md at a public URL (for example GitHub Pages or the repository's ra
 | Asset | Size | Content |
 |---|---|---|
 | Store icon | 128×128 | `icons/icon128.png` |
-| Screenshots (up to 5) | 1280×800 | 1. Highlighted tabs + toolbar icon. 2. Clean Markdown pasted into a chat. 3. Settings page. 4. PDF output. 5. "Nothing leaves your browser" |
+| Screenshots (up to 5) | 1280×800 | 1. Highlighted tabs + toolbar icon. 2. Clean Markdown pasted into a chat. 3. Settings page. 4. PDF output. 5. "Converted in your browser" |
 | Small promo tile | 440×280 | Logo, name, tagline |
 | Marquee promo tile (optional) | 1400×560 | Same, wider |

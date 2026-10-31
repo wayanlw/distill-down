@@ -4,6 +4,10 @@ importScripts('core.js', 'pdf.js');
 const WW = self.WW;
 const WWPdf = self.WWPdf;
 const NOTIFY_ICON = 'icons/icon128.png';
+const IMAGE_TIMEOUT_MS = 10000;
+const IMAGES_BUDGET_MS = 60000; // per page; no new image fetches start after this
+const IMAGE_MAX_BYTES = 15 * 1024 * 1024;
+const DOWNLOAD_TIMEOUT_MS = 5 * 60 * 1000; // long enough for a "save as" dialog
 
 let running = false;
 
@@ -25,13 +29,7 @@ function notify(message) {
 }
 
 async function loadSettings() {
-  try {
-    const got = await chrome.storage.sync.get(null);
-    return WW.sanitiseSettings(got);
-  } catch (e) {
-    const got = await chrome.storage.local.get(null);
-    return WW.sanitiseSettings(got);
-  }
+  return WW.sanitiseSettings(await chrome.storage.local.get(null));
 }
 
 async function ensureOffscreen() {
@@ -61,35 +59,93 @@ async function downloadBytes(bytes, mime, filename) {
     mime
   });
   if (!res || !res.ok) throw new Error((res && res.error) || 'could not create file');
-  await chrome.downloads.download({
+  const id = await chrome.downloads.download({
     url: res.url,
     filename,
     saveAs: false,
     conflictAction: 'uniquify'
   });
+  await waitForDownload(id);
+}
+
+// Resolves when Chrome reports the file finished; rejects if it was interrupted or cancelled.
+function waitForDownload(id) {
+  return new Promise((resolve, reject) => {
+    const settle = (state, error) => {
+      if (state === 'complete') {
+        cleanup();
+        resolve();
+      } else if (state === 'interrupted') {
+        cleanup();
+        reject(new Error('download interrupted' + (error ? ' (' + error + ')' : '')));
+      }
+    };
+    const listener = (delta) => {
+      if (delta.id === id && delta.state) settle(delta.state.current, delta.error && delta.error.current);
+    };
+    const timer = setTimeout(() => {
+      cleanup();
+      reject(new Error('download did not finish in time'));
+    }, DOWNLOAD_TIMEOUT_MS);
+    const cleanup = () => {
+      clearTimeout(timer);
+      chrome.downloads.onChanged.removeListener(listener);
+    };
+    chrome.downloads.onChanged.addListener(listener);
+    // It may have finished before the listener was added.
+    chrome.downloads.search({ id }).then(([item]) => {
+      if (item) settle(item.state, item.error);
+    }, () => {});
+  });
+}
+
+// Rejects if the promise takes longer than ms.
+function withTimeout(promise, ms, message) {
+  let timer;
+  const limit = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(message)), ms);
+  });
+  return Promise.race([promise, limit]).finally(() => clearTimeout(timer));
 }
 
 // Fetch each image (host permission allows cross-origin), encode as JPEG in the
 // offscreen document. Failures are left out of the map and fall back to text in pdf.js.
-async function resolveImages(urls) {
+// Image URLs are chosen by the page, so time, size and destination are all limited.
+async function resolveImages(urls, pageUrl) {
   const map = new Map();
-  for (let i = 0; i < urls.length; i += 4) {
+  const deadline = Date.now() + IMAGES_BUDGET_MS;
+  for (let i = 0; i < urls.length && Date.now() < deadline; i += 4) {
     await Promise.all(
       urls.slice(i, i + 4).map(async (u) => {
+        const ctl = new AbortController();
+        const timer = setTimeout(() => ctl.abort(), IMAGE_TIMEOUT_MS);
         try {
-          const ctl = new AbortController();
-          const timer = setTimeout(() => ctl.abort(), 10000);
+          if (!WW.isImageUrlAllowed(u, pageUrl)) throw new Error('private-network image from a public page');
           const r = await fetch(u, { signal: ctl.signal, credentials: 'omit' });
-          clearTimeout(timer);
+          // A redirect can land on a private address: the request has happened, but nothing is embedded.
+          if (!WW.isImageUrlAllowed(r.url, pageUrl)) {
+            ctl.abort();
+            throw new Error('redirected to a private-network image');
+          }
           const type = r.headers.get('content-type') || '';
           // Some CDNs serve images as octet-stream; the decoder decides.
-          if (!r.ok || !(type.startsWith('image/') || type.startsWith('application/octet-stream'))) return;
-          const buf = new Uint8Array(await r.arrayBuffer());
-          const res = await offscreenMessage({ type: 'encodeImage', data: WW.bytesToBase64(buf), mime: type });
+          if (!r.ok || !(type.startsWith('image/') || type.startsWith('application/octet-stream'))) {
+            ctl.abort();
+            return;
+          }
+          // The timer keeps running here, so a body that never ends is cut off too.
+          const buf = await WW.readBodyLimited(r, IMAGE_MAX_BYTES);
+          clearTimeout(timer);
+          const res = await withTimeout(
+            offscreenMessage({ type: 'encodeImage', data: WW.bytesToBase64(buf), mime: type }),
+            IMAGE_TIMEOUT_MS,
+            'image decode timed out'
+          );
           if (res && res.ok) {
             map.set(u, { jpeg: WW.base64ToBytes(res.data), width: res.width, height: res.height });
           }
         } catch (err) {
+          clearTimeout(timer);
           console.warn('[ww] image fallback to text', u, err && err.message);
         }
       })
@@ -204,10 +260,23 @@ async function run(activeTab) {
     if (behaviour.clipboard) {
       try {
         const clipPages = extracted.filter((p) => p.cleaned);
-        await copyToClipboard(
-          WW.buildClipboardText(clipPages.map((p) => ({ title: p.title, url: p.url, markdown: WW.stripUrls(p.cleaned, settings) })))
-        );
-        pagesCopied = clipPages.length;
+        // No Cleaned text: leave whatever the user has on the clipboard alone.
+        if (clipPages.length === 0) {
+          failures.push('Clipboard not changed: no main content found.');
+        } else {
+          await copyToClipboard(
+            WW.buildClipboardText(clipPages.map((p) => ({
+              title: p.title,
+              url: WW.formatSourceUrl(p.url, settings.sourceUrl),
+              markdown: WW.stripUrls(p.cleaned, settings)
+            })))
+          );
+          pagesCopied = clipPages.length;
+          if (clipPages.length < extracted.length) {
+            const missing = extracted.length - clipPages.length;
+            failures.push('Clipboard left out ' + missing + ' of ' + extracted.length + ' pages: no main content found.');
+          }
+        }
       } catch (err) {
         console.error('[ww] clipboard failed', err);
         failures.push('Clipboard failed: ' + err.message);
@@ -254,7 +323,11 @@ async function run(activeTab) {
                 ? stamp + '_' + WW.sanitiseTitle(pages[0].title)
                 : stamp + '_' + pages.length + '-pages';
             const name = WW.uniqueBase(base, taken) + '.md';
-            const text = WW.buildMarkdownFile(pages.map((p) => ({ title: p.title, url: p.url, markdown: WW.stripUrls(p.content, settings) })));
+            const text = WW.buildMarkdownFile(pages.map((p) => ({
+              title: p.title,
+              url: WW.formatSourceUrl(p.url, settings.sourceUrl),
+              markdown: WW.stripUrls(p.content, settings)
+            })));
             await downloadBytes(WW.utf8Bytes(text), 'text/markdown', dest + name);
             pagesSaved += pages.length;
             filesSaved += 1;
@@ -269,8 +342,8 @@ async function run(activeTab) {
             const name = WW.uniqueBase(stamp + '_' + WW.sanitiseTitle(p.title), taken) + '.pdf';
             // Images off: they become "[Image: alt]" text, so none are fetched or embedded.
             const md = WW.stripUrls(p.content, settings);
-            const images = await resolveImages(WWPdf.collectImageUrls(md));
-            const bytes = await WWPdf.buildPdf(p.title, p.url, md, images);
+            const images = settings.includeImages ? await resolveImages(WWPdf.collectImageUrls(md), p.url) : new Map();
+            const bytes = await WWPdf.buildPdf(p.title, WW.formatSourceUrl(p.url, settings.sourceUrl), md, images);
             await downloadBytes(bytes, 'application/pdf', dest + name);
             pagesSaved += 1;
             filesSaved += 1;

@@ -156,6 +156,15 @@
           <input type="checkbox" id="includeImages">
         </div>
         <p class="hint">Off keeps the link text and drops the address; images become [Image: description]. In a PDF, off also means no pictures are embedded. Does not affect Page print.</p>
+        <div class="row">
+          <label for="sourceUrl">Source address</label>
+          <select id="sourceUrl">
+            <option value="trimmed">Without query or fragment</option>
+            <option value="full">Full address</option>
+            <option value="none">Leave out</option>
+          </select>
+        </div>
+        <p class="hint">The page address written with each page. Everything after ? or # can hold tokens or private identifiers. Does not affect Page print.</p>
       </section>
 
       <section>
@@ -180,7 +189,7 @@
               <option value="print">Page print (as the browser prints it, PDF only)</option>
             </select>
           </div>
-          <p class="hint">Not used for the clipboard, which is always Cleaned. Page print shows a brief "debugging this browser" banner.</p>
+          <p class="hint">Not used for the clipboard, which is always Cleaned. Page print shows a brief "debugging this browser" banner. Cleaned PDF supports Western European characters only; others print as "?". Use Page print for other scripts or mathematical notation.</p>
           <div class="row">
             <label for="destination">Destination folder (inside Downloads)</label>
             <input type="text" id="destination" placeholder="DD-Captures">
@@ -194,7 +203,7 @@
         <span id="status" role="status"></span>
       </div>
 
-      <footer>Everything runs in your browser. Distill Down never sends your pages anywhere.</footer>
+      <footer>Pages are converted in your browser and are never sent to the developer or an AI service. A PDF with images downloads those images from the sites that host them.</footer>
     </main>
 
     <script src="core.js"></script>

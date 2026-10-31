@@ -59,6 +59,21 @@ test('both modes returned in one pass', () => {
   assert.match(r.full, /FOOTER-TEXT/);
 });
 
+test('cleaned failing does not lose full: partial result, no error', () => {
+  const html = '<html><head><title>Empty</title></head><body><p>SHORT-TEXT</p></body></html>';
+  const dom = new JSDOM(html, { url: 'https://e.test/', runScripts: 'outside-only' });
+  const w = dom.window;
+  w.__wwOpts = { modes: ['cleaned', 'full'] };
+  w.eval(read('lib/turndown.js'));
+  // Readability finding nothing is simulated so this test does not depend on its scoring.
+  w.eval('window.Readability = function () { this.parse = () => null; };');
+  w.eval(read('extract.js'));
+  const r = w.__wwResult;
+  assert.equal(r.error, null);
+  assert.equal(r.cleaned, null);
+  assert.match(r.full, /SHORT-TEXT/);
+});
+
 test('page with no article content reports an error instead of throwing', () => {
   const r = runExtract('<html><head><title>Empty</title></head><body></body></html>', 'https://e.test/', ['cleaned']);
   assert.ok(r.error, 'expected an error message');

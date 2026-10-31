@@ -29,6 +29,11 @@ chrome.downloads.download = (options) => {
   return originalDownload(options);
 };
 
+// Set self.__failDownloads to make every download report as interrupted.
+const originalSearch = chrome.downloads.search.bind(chrome.downloads);
+chrome.downloads.search = (query) =>
+  self.__failDownloads ? Promise.resolve([{ state: 'interrupted', error: 'USER_CANCELED' }]) : originalSearch(query);
+
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (!msg || msg.type !== 'ww-test-run') return false;
   lastNotify = '';
@@ -144,6 +149,17 @@ const PAGES = {
   '/nav': page('WW Nav Page', MARKERS.nav, {
     before: '<nav><ul><li><a href="/x">NAVTEXT-MENU-ITEM</a></li><li><a href="/y">NAVTEXT-OTHER</a></li></ul></nav>',
     after: '<footer><p>FOOTERTEXT-COPYRIGHT</p></footer>'
+  }),
+  // Readability finds no article here, but Full still has text.
+  '/nocontent': '<!doctype html><html><head><title>WW No Content</title></head><body><button>BUTTON-ONLY-TEXT</button></body></html>',
+  '/codeimage': page('WW Code Image Page', MARKERS.image, {
+    inside: '<pre><code>![sample](__ORIGIN__/big.png?from=codeblock)\n</code></pre>'
+  }),
+  '/endlessimage': page('WW Endless Image Page', MARKERS.image, {
+    inside: '<p><img src="/endless.png" alt="Endless picture"></p>'
+  }),
+  '/hugeimage': page('WW Huge Image Page', MARKERS.image, {
+    inside: '<p><img src="/huge.png" alt="Huge picture"></p>'
   })
 };
 
@@ -161,20 +177,46 @@ const test = base.test.extend({
   site: [
     // eslint-disable-next-line no-empty-pattern
     async ({}, use) => {
+      const requests = [];
+      let origin = '';
       const server = http.createServer((req, res) => {
+        requests.push(req.url);
         const route = req.url.split('?')[0];
         if (route === '/big.png') {
           res.writeHead(200, { 'content-type': 'image/png', 'content-length': BIG_PNG.length });
           res.end(BIG_PNG);
           return;
         }
+        // A body that never ends, with no declared size.
+        if (route === '/endless.png') {
+          res.writeHead(200, { 'content-type': 'image/png' });
+          const timer = setInterval(() => res.write(Buffer.alloc(1024)), 200);
+          req.on('close', () => clearInterval(timer));
+          return;
+        }
+        // Over the byte limit, sent without a declared size so the streaming check is what stops it.
+        if (route === '/huge.png') {
+          res.writeHead(200, { 'content-type': 'image/png' });
+          const chunk = Buffer.alloc(1024 * 1024);
+          let sent = 0;
+          const pump = () => {
+            while (sent < 64 && !res.destroyed) {
+              sent += 1;
+              if (!res.write(chunk)) return res.once('drain', pump);
+            }
+            res.end();
+          };
+          pump();
+          return;
+        }
         const body = PAGES[route];
         res.writeHead(body ? 200 : 404, { 'content-type': 'text/html; charset=utf-8' });
-        res.end(body || 'not found');
+        res.end(body ? body.replace(/__ORIGIN__/g, origin) : 'not found');
       });
       await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
-      const origin = `http://127.0.0.1:${server.address().port}`;
-      await use({ origin, url: (p) => origin + p });
+      origin = `http://127.0.0.1:${server.address().port}`;
+      await use({ origin, requests, url: (p) => origin + p });
+      server.closeAllConnections();
       await new Promise((resolve) => server.close(resolve));
     },
     { scope: 'worker' }
@@ -198,8 +240,8 @@ const test = base.test.extend({
       worker,
       async setSettings(settings) {
         await worker.evaluate(async (s) => {
-          await chrome.storage.sync.clear();
-          await chrome.storage.sync.set(s);
+          await chrome.storage.local.clear();
+          await chrome.storage.local.set(s);
         }, settings);
       },
       async open(pathname) {

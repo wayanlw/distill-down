@@ -1,4 +1,4 @@
-// Options page. Settings live in chrome.storage.sync, falling back to local.
+// Options page. Settings live in chrome.storage.local.
 const $ = (id) => document.getElementById(id);
 
 function readForm() {
@@ -9,7 +9,8 @@ function readForm() {
     content: $('content').value,
     destination: $('destination').value,
     includeLinks: $('includeLinks').checked,
-    includeImages: $('includeImages').checked
+    includeImages: $('includeImages').checked,
+    sourceUrl: $('sourceUrl').value
   };
 }
 
@@ -21,6 +22,7 @@ function applyForm(s) {
   $('destination').value = s.destination;
   $('includeLinks').checked = s.includeLinks;
   $('includeImages').checked = s.includeImages;
+  $('sourceUrl').value = s.sourceUrl;
   // Page print exists only for PDF; Full only for Markdown.
   const printOpt = $('content').querySelector('option[value="print"]');
   printOpt.disabled = printOpt.hidden = s.format !== 'pdf';
@@ -32,21 +34,16 @@ function applyForm(s) {
 }
 
 async function load() {
-  let raw = {};
-  try {
-    raw = await chrome.storage.sync.get(null);
-  } catch (e) {
-    raw = await chrome.storage.local.get(null);
-  }
-  applyForm(WW.sanitiseSettings(raw));
+  applyForm(WW.sanitiseSettings(await chrome.storage.local.get(null)));
 }
 
 async function save() {
   const s = WW.sanitiseSettings(readForm());
   try {
-    await chrome.storage.sync.set(s);
-  } catch (e) {
     await chrome.storage.local.set(s);
+  } catch (e) {
+    $('status').textContent = 'Could not save settings';
+    return;
   }
   applyForm(s);
   $('status').textContent = 'Saved';

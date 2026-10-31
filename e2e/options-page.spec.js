@@ -48,6 +48,6 @@ test('Restore defaults resets the form and the stored settings', async ({ ext })
   await expect(page.locator('#includeLinks')).not.toBeChecked();
   await expect(page.locator('#includeImages')).not.toBeChecked();
   await expect(page.locator('#format')).toHaveValue('markdown');
-  const stored = await ext.worker.evaluate(() => chrome.storage.sync.get(null));
+  const stored = await ext.worker.evaluate(() => chrome.storage.local.get(null));
   expect(stored).toMatchObject({ clipboard: true, download: false, includeLinks: false, includeImages: false });
 });

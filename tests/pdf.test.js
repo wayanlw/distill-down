@@ -108,6 +108,25 @@ test('markdown syntax is stripped and links are kept readable', () => {
   assert.equal(lines[1], 'site (https://s.test) [image: pic] https://i.test/p.png');
 });
 
+test('Windows-1252 typography maps to WinAnsi bytes; control bytes do not pass through', () => {
+  assert.equal(PDF.toPdfString('’“”—–…€'), '\x92\x93\x94\x97\x96\x85\x80');
+  assert.equal(PDF.toPdfString('café'), 'café');
+  assert.equal(PDF.toPdfString('\u0091'), '?');
+});
+
+test('image syntax inside a code block is not collected', () => {
+  const fence = '`'.repeat(3);
+  const md = [fence, '![x](https://a.test/code.png)', fence, '', '![y](https://a.test/real.png)'].join('\n');
+  assert.deepEqual(PDF.collectImageUrls(md), ['https://a.test/real.png']);
+  const nested = ['````', fence, '![x](https://a.test/code.png)', fence, '````'].join('\n');
+  assert.deepEqual(PDF.collectImageUrls(nested), []);
+});
+
+test('empty source URL leaves no URL line in the PDF', async () => {
+  const text = inflatedContent(await PDF.buildPdf('Title', '', 'Body'));
+  assert.equal((text.match(/Tj ET/g) || []).length, 3); // title, blank line, body
+});
+
 test('non-Latin-1 characters become ? and PDF specials are escaped', () => {
   assert.equal(PDF.toPdfString('a(b)c\\d 中'), 'a\\(b\\)c\\\\d ?');
 });

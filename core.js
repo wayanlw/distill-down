@@ -10,7 +10,8 @@
     content: 'cleaned', // 'cleaned' | 'full' (markdown only) | 'print' (pdf only: browser print-to-PDF)
     destination: 'DD-Captures',
     includeLinks: false, // false keeps link text, drops the URL (Markdown, clipboard, text PDF)
-    includeImages: false // false turns images into [Image: alt]; no pictures in text PDF
+    includeImages: false, // false turns images into [Image: alt]; no pictures in text PDF
+    sourceUrl: 'trimmed' // 'trimmed' (no query or fragment) | 'full' | 'none'
   });
 
   const RESTRICTED_PREFIXES = [
@@ -129,7 +130,77 @@
     if (s.content !== 'cleaned' && !fullOk && !printOk) s.content = DEFAULT_SETTINGS.content;
     // An explicit empty string means "save straight into Downloads".
     s.destination = s.destination === '' ? '' : sanitiseDestination(s.destination);
+    if (!['trimmed', 'full', 'none'].includes(s.sourceUrl)) s.sourceUrl = DEFAULT_SETTINGS.sourceUrl;
     return s;
+  }
+
+  // The page address as written into output. Queries and fragments can hold tokens.
+  function formatSourceUrl(url, mode) {
+    if (mode === 'none') return '';
+    if (mode === 'full') return String(url || '');
+    return String(url || '').split(/[?#]/)[0];
+  }
+
+  // Loopback, link-local, private ranges and intranet-style names. Works on the name
+  // only: a public name that resolves to a private address is not detected.
+  function isPrivateHost(hostname) {
+    const h = String(hostname || '').toLowerCase().replace(/^\[|\]$/g, '');
+    if (h.includes(':')) {
+      return h === '::1' || h === '::' || h.startsWith('::ffff:') || /^f[cd]/.test(h) || /^fe[89ab]/.test(h);
+    }
+    if (!h.includes('.')) return true;
+    if (/(^|\.)(localhost|local|internal|intranet|lan|home\.arpa)$/.test(h)) return true;
+    const m = h.match(/^(\d+)\.(\d+)\.\d+\.\d+$/);
+    if (!m) return false;
+    const a = Number(m[1]);
+    const b = Number(m[2]);
+    return (
+      a === 0 || a === 10 || a === 127 ||
+      (a === 100 && b >= 64 && b <= 127) ||
+      (a === 169 && b === 254) ||
+      (a === 172 && b >= 16 && b <= 31) ||
+      (a === 192 && b === 168)
+    );
+  }
+
+  // A public page may not point the extension at a private-network image.
+  // A page already on a private network may use images from that network.
+  function isImageUrlAllowed(imageUrl, pageUrl) {
+    try {
+      const img = new URL(imageUrl);
+      if (img.protocol !== 'http:' && img.protocol !== 'https:') return false;
+      return !isPrivateHost(img.hostname) || isPrivateHost(new URL(pageUrl).hostname);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // Reads a fetch Response, stopping as soon as it passes maxBytes.
+  async function readBodyLimited(response, maxBytes) {
+    if (Number(response.headers.get('content-length')) > maxBytes) {
+      await response.body?.cancel().catch(() => {});
+      throw new Error('image too large');
+    }
+    const reader = response.body.getReader();
+    const chunks = [];
+    let total = 0;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.length;
+      if (total > maxBytes) {
+        await reader.cancel().catch(() => {});
+        throw new Error('image too large');
+      }
+      chunks.push(value);
+    }
+    const out = new Uint8Array(total);
+    let offset = 0;
+    for (const c of chunks) {
+      out.set(c, offset);
+      offset += c.length;
+    }
+    return out;
   }
 
   // Drops URLs from Markdown to reduce noise. Images first (so linked images work),
@@ -153,10 +224,11 @@
       .join('');
   }
 
-  // One page as Markdown: H1 title, source URL, body.
+  // One page as Markdown: H1 title, source URL (if any), body.
   function buildPageMarkdown(page) {
     const title = String(page.title || '').trim() || 'Untitled';
-    return '# ' + title + '\n\n' + page.url + '\n\n' + String(page.markdown || '').trim() + '\n';
+    const source = page.url ? page.url + '\n\n' : '';
+    return '# ' + title + '\n\n' + source + String(page.markdown || '').trim() + '\n';
   }
 
   // Several pages in one Markdown file, separated by a horizontal rule.
@@ -169,9 +241,8 @@
     return pages
       .map((p) => {
         const title = String(p.title || '').trim() || 'Untitled';
-        return (
-          '---\nSource: ' + title + ' \u2014 ' + p.url + '\n---\n' + String(p.markdown || '').trim() + '\n'
-        );
+        const source = p.url ? title + ' \u2014 ' + p.url : title;
+        return '---\nSource: ' + source + '\n---\n' + String(p.markdown || '').trim() + '\n';
       })
       .join('\n');
   }
@@ -232,6 +303,10 @@
     uniqueBase,
     sanitiseDestination,
     sanitiseSettings,
+    formatSourceUrl,
+    isPrivateHost,
+    isImageUrlAllowed,
+    readBodyLimited,
     stripUrls,
     buildPageMarkdown,
     buildMarkdownFile,

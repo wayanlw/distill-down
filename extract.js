@@ -41,22 +41,36 @@
       });
     };
 
+    // Each mode runs on its own: one failing must not lose the other's result.
+    const failures = [];
     if (modes.indexOf('cleaned') !== -1) {
-      const article = new Readability(document.cloneNode(true)).parse();
-      if (!article || !article.content) {
-        throw new Error('Could not find main content on this page');
+      try {
+        const article = new Readability(document.cloneNode(true)).parse();
+        if (!article || !article.content) {
+          throw new Error('Could not find main content on this page');
+        }
+        const wrap = document.createElement('div');
+        wrap.innerHTML = article.content;
+        absolutise(wrap);
+        out.cleaned = td.turndown(wrap);
+        if (!out.cleaned) throw new Error('Could not find main content on this page');
+      } catch (err) {
+        failures.push(err);
       }
-      const wrap = document.createElement('div');
-      wrap.innerHTML = article.content;
-      absolutise(wrap);
-      out.cleaned = td.turndown(wrap);
     }
 
     if (modes.indexOf('full') !== -1) {
-      const body = document.body ? document.body.cloneNode(true) : document.createElement('div');
-      absolutise(body);
-      out.full = td.turndown(body);
+      try {
+        const body = document.body ? document.body.cloneNode(true) : document.createElement('div');
+        absolutise(body);
+        out.full = td.turndown(body);
+      } catch (err) {
+        failures.push(err);
+      }
     }
+
+    // An error means no requested mode produced a result.
+    if (failures.length && failures.length === modes.length) throw failures[0];
   } catch (err) {
     out.error = String((err && err.message) || err);
   }

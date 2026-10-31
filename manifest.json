@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Distill Down: tabs to clean Markdown & PDF",
   "version": "0.1.0",
-  "description": "Turn highlighted tabs into clean Markdown or PDF, saved or copied for your AI tools. Runs in your browser; nothing is sent anywhere.",
+  "description": "Turn highlighted tabs into clean Markdown or PDF for your AI tools. Converted locally; PDFs with images contact image hosts.",
   "minimum_chrome_version": "116",
   "permissions": ["tabs", "scripting", "downloads", "notifications", "storage", "offscreen", "clipboardWrite"],
   "optional_permissions": ["debugger"],

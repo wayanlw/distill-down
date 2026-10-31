@@ -16,6 +16,7 @@ function base64ToBytes(b64) {
 }
 
 const IMG_MAX_W = 1000;
+const IMG_MAX_PIXELS = 40 * 1000 * 1000;
 const JPEG_QUALITY = 0.6;
 
 function bytesToBase64(bytes) {
@@ -40,10 +41,16 @@ async function encodeImage(b64, mime) {
       const img = new Image();
       img.src = url;
       await img.decode();
+      if (img.naturalWidth * img.naturalHeight > IMG_MAX_PIXELS) throw new Error('image has too many pixels');
       bmp = await createImageBitmap(img, { resizeWidth: Math.min(IMG_MAX_W, img.naturalWidth || IMG_MAX_W) });
     } finally {
       URL.revokeObjectURL(url);
     }
+  }
+  // The decoder has already run by now; this stops further work on oversized images.
+  if (bmp.width * bmp.height > IMG_MAX_PIXELS) {
+    bmp.close();
+    throw new Error('image has too many pixels');
   }
   const scale = Math.min(1, IMG_MAX_W / bmp.width);
   const w = Math.max(1, Math.round(bmp.width * scale));

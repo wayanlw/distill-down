@@ -8,10 +8,15 @@ Distill Down does not collect, store on a server, sell or share your data. It ha
 When you click the toolbar icon, Distill Down reads the content of the tabs you have highlighted. It converts that content to Markdown or PDF on your device. The result goes only where you chose: your clipboard, a file in your Downloads folder, or both.
 
 ## What it stores
-Your settings (for example clipboard on or off, format, destination folder) are saved with Chrome's extension storage. If you are signed in to Chrome with sync turned on, Chrome may sync these settings across your devices through your Google account. This is Chrome's own feature and not a service run by Distill Down. Page content is never stored by the extension.
+Your settings (for example clipboard on or off, format, destination folder) are saved on this device with Chrome's extension storage. Page content is never stored by the extension, other than in the files you ask it to save.
 
 ## Network requests
-Distill Down makes no requests to any AI service, analytics service or server run by the developer. The one exception is images. When you save a PDF with images, the extension downloads the images that are already on the page, directly from the sites that host them, without cookies. This is the same traffic your browser generates when it displays those pages.
+Distill Down makes no requests to any AI service, analytics service or server run by the developer. Conversion happens on your device.
+
+The one exception is optional. When you save a PDF with "Include image URLs" turned on, the extension requests the page's images directly from the sites that host them, without cookies. These are new requests made at the time of export, and those sites can see them and your IP address. They can include images your browser had not yet loaded, such as lazy-loaded ones. A public page's images are not requested from private-network addresses, though the check uses the address's name, so a public name that points to a private address is not detected. A redirect can also reach a private address; that image is not embedded.
+
+## What goes into your output
+By default, the source address in clipboard text and files has its query string and fragment removed, because they can hold tokens or private identifiers. You can choose the full address or none in settings. Whatever you paste or upload elsewhere is then subject to that service's own terms.
 
 ## Permissions, and why
 | Permission | Why |
