@@ -15,13 +15,29 @@
     });
     td.remove(['script', 'style', 'noscript', 'template', 'iframe']);
 
+    // Lazy-loaded pages keep a placeholder in src. The live element knows the real
+    // URL (currentSrc covers srcset and <picture>), so record it before cloning.
+    const liveImgs = Array.from(document.querySelectorAll('img'));
+    liveImgs.forEach((img) => {
+      // Lazy attributes first: currentSrc and src may still be a data: placeholder.
+      const real =
+        img.getAttribute('data-src') ||
+        img.getAttribute('data-lazy-src') ||
+        img.getAttribute('data-original') ||
+        img.currentSrc ||
+        img.src;
+      if (real) img.setAttribute('data-ww-src', real);
+    });
+
     // Images and links stay as Markdown links; make relative URLs absolute.
     const absolutise = (root) => {
       root.querySelectorAll('a[href]').forEach((a) => {
         try { a.setAttribute('href', new URL(a.getAttribute('href'), location.href).href); } catch (e) { /* keep */ }
       });
-      root.querySelectorAll('img[src]').forEach((img) => {
-        try { img.setAttribute('src', new URL(img.getAttribute('src'), location.href).href); } catch (e) { /* keep */ }
+      root.querySelectorAll('img').forEach((img) => {
+        const raw = img.getAttribute('data-ww-src') || img.getAttribute('src');
+        if (!raw) return;
+        try { img.setAttribute('src', new URL(raw, location.href).href); } catch (e) { /* keep */ }
       });
     };
 
@@ -45,5 +61,6 @@
     out.error = String((err && err.message) || err);
   }
 
+  document.querySelectorAll('img[data-ww-src]').forEach((img) => img.removeAttribute('data-ww-src'));
   window.__wwResult = out;
 })();

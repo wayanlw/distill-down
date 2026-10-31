@@ -44,10 +44,11 @@
         <label for="content">Content</label>
         <select id="content">
           <option value="cleaned">Cleaned (main content only)</option>
-          <option value="full">Full (entire page, for debugging)</option>
+          <option value="full">Full (entire page, with pictures in PDF)</option>
+          <option value="print">Page print (as the browser prints it, PDF only)</option>
         </select>
       </div>
-      <div class="hint">Applies to Markdown and PDF downloads. Not the clipboard.</div>
+      <div class="hint">Not used for the clipboard, which is always Cleaned. Page print shows a brief "debugging this browser" banner.</div>
       <div class="row">
         <label for="destination">Destination folder (inside Downloads)</label>
         <input type="text" id="destination" placeholder="AI-Captures">

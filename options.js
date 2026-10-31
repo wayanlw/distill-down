@@ -17,6 +17,9 @@ function applyForm(s) {
   $('format').value = s.format;
   $('content').value = s.content;
   $('destination').value = s.destination;
+  // Page print only exists for PDF.
+  const printOpt = $('content').querySelector('option[value="print"]');
+  printOpt.disabled = printOpt.hidden = s.format !== 'pdf';
   const sub = $('downloadSub');
   sub.classList.toggle('off', !s.download);
   for (const el of sub.querySelectorAll('select, input')) el.disabled = !s.download;

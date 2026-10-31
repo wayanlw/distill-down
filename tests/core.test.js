@@ -55,6 +55,15 @@ test('destination sanitising keeps it inside Downloads', () => {
   assert.equal(WW.sanitiseDestination('..'), 'AI-Captures');
   assert.equal(WW.sanitiseDestination(''), 'AI-Captures');
   assert.equal(WW.sanitiseSettings({ destination: '' }).destination, '');
+  assert.deepEqual(
+    (({ format, content }) => ({ format, content }))(WW.sanitiseSettings({ format: 'pdf', content: 'print' })),
+    { format: 'pdf', content: 'print' }
+  );
+  // Print is PDF-only; legacy format 'print' migrates.
+  assert.equal(WW.sanitiseSettings({ format: 'markdown', content: 'print' }).content, 'cleaned');
+  assert.equal(WW.sanitiseSettings({ format: 'print' }).content, 'print');
+  assert.equal(WW.sanitiseSettings({ format: 'print' }).format, 'pdf');
+  assert.equal(WW.sanitiseSettings({ format: 'bogus' }).format, 'markdown');
 });
 
 test('settings sanitising applies defaults and rejects bad values', () => {

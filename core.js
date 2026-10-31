@@ -7,7 +7,7 @@
     clipboard: false,
     download: true,
     format: 'markdown', // 'markdown' | 'pdf'
-    content: 'cleaned', // 'cleaned' | 'full'
+    content: 'cleaned', // 'cleaned' | 'full' | 'print' (print only with format 'pdf': browser print-to-PDF)
     destination: 'AI-Captures'
   });
 
@@ -112,8 +112,14 @@
     const s = Object.assign({}, DEFAULT_SETTINGS, raw || {});
     s.clipboard = !!s.clipboard;
     s.download = !!s.download;
+    // Legacy value from an earlier build: format 'print' became PDF + content 'print'.
+    if (s.format === 'print') {
+      s.format = 'pdf';
+      s.content = 'print';
+    }
     if (s.format !== 'markdown' && s.format !== 'pdf') s.format = DEFAULT_SETTINGS.format;
-    if (s.content !== 'cleaned' && s.content !== 'full') s.content = DEFAULT_SETTINGS.content;
+    const printOk = s.content === 'print' && s.format === 'pdf';
+    if (s.content !== 'cleaned' && s.content !== 'full' && !printOk) s.content = DEFAULT_SETTINGS.content;
     // An explicit empty string means "save straight into Downloads".
     s.destination = s.destination === '' ? '' : sanitiseDestination(s.destination);
     return s;

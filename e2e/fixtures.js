@@ -126,6 +126,11 @@ const PAGES = {
   '/image': page('WW Image Page', MARKERS.image, {
     inside: '<p><img src="/big.png" alt="Big gradient"></p>'
   }),
+  // Lazy-loaded style: src is a 1px placeholder, the real picture is in data-src.
+  '/lazyimage': page('WW Lazy Image Page', MARKERS.image, {
+    inside:
+      '<p><img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" data-src="/big.png" alt="Lazy picture"></p>'
+  }),
   '/brokenimage': page('WW Broken Image Page', MARKERS.broken, {
     inside: '<p><img src="/missing.png" alt="Missing picture"></p>'
   }),

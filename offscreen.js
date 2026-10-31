@@ -30,7 +30,21 @@ function bytesToBase64(bytes) {
 // Decode, downscale to IMG_MAX_W wide, flatten onto white, re-encode as JPEG.
 async function encodeImage(b64, mime) {
   const blob = new Blob([base64ToBytes(b64)], { type: mime || '' });
-  const bmp = await createImageBitmap(blob);
+  let bmp;
+  try {
+    bmp = await createImageBitmap(blob);
+  } catch (e) {
+    // SVG blobs cannot go through createImageBitmap; decode them with an <img>.
+    const url = URL.createObjectURL(new Blob([base64ToBytes(b64)], { type: mime || 'image/svg+xml' }));
+    try {
+      const img = new Image();
+      img.src = url;
+      await img.decode();
+      bmp = await createImageBitmap(img, { resizeWidth: Math.min(IMG_MAX_W, img.naturalWidth || IMG_MAX_W) });
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+  }
   const scale = Math.min(1, IMG_MAX_W / bmp.width);
   const w = Math.max(1, Math.round(bmp.width * scale));
   const h = Math.max(1, Math.round(bmp.height * scale));

@@ -82,7 +82,8 @@ async function resolveImages(urls) {
           const r = await fetch(u, { signal: ctl.signal, credentials: 'omit' });
           clearTimeout(timer);
           const type = r.headers.get('content-type') || '';
-          if (!r.ok || !type.startsWith('image/')) return;
+          // Some CDNs serve images as octet-stream; the decoder decides.
+          if (!r.ok || !(type.startsWith('image/') || type.startsWith('application/octet-stream'))) return;
           const buf = new Uint8Array(await r.arrayBuffer());
           const res = await offscreenMessage({ type: 'encodeImage', data: WW.bytesToBase64(buf), mime: type });
           if (res && res.ok) {
@@ -125,6 +126,24 @@ async function extractTab(tab, modes) {
   }
 }
 
+// Browser print-to-PDF of the live page via the DevTools protocol.
+// Chrome shows a "debugging this browser" banner while attached.
+async function printTabToPdf(tab) {
+  if (WW.isRestrictedUrl(tab.url)) throw new WW.SkipError('restricted page (cannot print)');
+  const target = { tabId: tab.id };
+  try {
+    await chrome.debugger.attach(target, '1.3');
+  } catch (err) {
+    throw new WW.SkipError('cannot print this page: ' + String((err && err.message) || err));
+  }
+  try {
+    const res = await chrome.debugger.sendCommand(target, 'Page.printToPDF', { printBackground: true });
+    return WW.base64ToBytes(res.data);
+  } finally {
+    await chrome.debugger.detach(target).catch(() => {});
+  }
+}
+
 async function run(activeTab) {
   if (running) {
     notify('Already processing, please wait');
@@ -142,14 +161,18 @@ async function run(activeTab) {
     const highlighted = await chrome.tabs.query({ highlighted: true, currentWindow: true });
     const tabs = WW.pickTabs(highlighted, activeTab);
 
+    // Page print needs no extraction; it prints the live page.
+    const printMode = behaviour.download && settings.format === 'pdf' && settings.content === 'print';
+    const needExtract = behaviour.clipboard || (behaviour.download && !printMode);
+
     const modes = [];
     if (behaviour.clipboard) modes.push('cleaned');
-    if (behaviour.download && !modes.includes(settings.content)) modes.push(settings.content);
+    if (behaviour.download && !printMode && !modes.includes(settings.content)) modes.push(settings.content);
 
     const skipped = [];
     const failures = [];
     const extracted = [];
-    for (const tab of tabs) {
+    for (const tab of needExtract ? tabs : []) {
       try {
         const res = await extractTab(tab, modes);
         extracted.push({
@@ -165,7 +188,7 @@ async function run(activeTab) {
       }
     }
 
-    if (extracted.length === 0) {
+    if (needExtract && extracted.length === 0 && !printMode) {
       notify(buildFailText(skipped));
       return;
     }
@@ -188,8 +211,28 @@ async function run(activeTab) {
       }
     }
 
+    // Page print: one PDF per tab, independent of extraction.
+    if (printMode) {
+      const stamp = WW.timestamp(new Date());
+      const taken = new Set();
+      const dest = settings.destination ? settings.destination + '/' : '';
+      for (const tab of tabs) {
+        try {
+          const bytes = await printTabToPdf(tab);
+          const name = WW.uniqueBase(stamp + '_' + WW.sanitiseTitle(tab.title || tab.url), taken) + '.pdf';
+          await downloadBytes(bytes, 'application/pdf', dest + name);
+          pagesSaved += 1;
+          filesSaved += 1;
+        } catch (err) {
+          const reason = err instanceof WW.SkipError ? err.message : 'print failed: ' + String(err && err.message);
+          console.error('[ww] print failed', tab.url, reason);
+          skipped.push({ title: tab.title || tab.url, url: tab.url, reason });
+        }
+      }
+    }
+
     // Download: independent of clipboard result.
-    if (behaviour.download) {
+    if (behaviour.download && !printMode) {
       const stamp = WW.timestamp(new Date());
       const taken = new Set();
       const dest = settings.destination ? settings.destination + '/' : '';
