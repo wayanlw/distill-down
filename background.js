@@ -264,8 +264,10 @@ async function run(activeTab) {
         for (const p of pages) {
           try {
             const name = WW.uniqueBase(stamp + '_' + WW.sanitiseTitle(p.title), taken) + '.pdf';
-            const images = await resolveImages(WWPdf.collectImageUrls(p.content));
-            const bytes = await WWPdf.buildPdf(p.title, p.url, p.content, images);
+            // Images off: they become "[Image: alt]" text, so none are fetched or embedded.
+            const md = WW.stripUrls(p.content, settings);
+            const images = await resolveImages(WWPdf.collectImageUrls(md));
+            const bytes = await WWPdf.buildPdf(p.title, p.url, md, images);
             await downloadBytes(bytes, 'application/pdf', dest + name);
             pagesSaved += 1;
             filesSaved += 1;

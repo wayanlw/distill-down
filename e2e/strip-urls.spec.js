@@ -16,3 +16,15 @@ test('clipboard keeps the image URL by default', async ({ ext }) => {
   await ext.run(p);
   expect(await ext.readClipboard(p)).toContain('big.png');
 });
+
+const fs = require('fs');
+
+test('PDF embeds no picture when includeImages is off', async ({ ext }) => {
+  await ext.setSettings({ clipboard: false, download: true, format: 'pdf', content: 'cleaned', includeImages: false });
+  const p = await ext.open('/image');
+  await ext.run(p);
+  const [file] = await ext.waitForDownloads(1);
+  const pdf = fs.readFileSync(file.filename).toString('latin1');
+  expect(pdf.startsWith('%PDF-')).toBe(true);
+  expect(pdf).not.toContain('/Subtype /Image');
+});
