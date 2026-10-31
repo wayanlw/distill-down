@@ -7,7 +7,9 @@ function readForm() {
     download: $('download').checked,
     format: $('format').value,
     content: $('content').value,
-    destination: $('destination').value
+    destination: $('destination').value,
+    includeLinks: $('includeLinks').checked,
+    includeImages: $('includeImages').checked
   };
 }
 
@@ -17,6 +19,8 @@ function applyForm(s) {
   $('format').value = s.format;
   $('content').value = s.content;
   $('destination').value = s.destination;
+  $('includeLinks').checked = s.includeLinks;
+  $('includeImages').checked = s.includeImages;
   // Page print only exists for PDF.
   const printOpt = $('content').querySelector('option[value="print"]');
   printOpt.disabled = printOpt.hidden = s.format !== 'pdf';

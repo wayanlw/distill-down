@@ -202,7 +202,7 @@ async function run(activeTab) {
       try {
         const clipPages = extracted.filter((p) => p.cleaned);
         await copyToClipboard(
-          WW.buildClipboardText(clipPages.map((p) => ({ title: p.title, url: p.url, markdown: p.cleaned })))
+          WW.buildClipboardText(clipPages.map((p) => ({ title: p.title, url: p.url, markdown: WW.stripUrls(p.cleaned, settings) })))
         );
         pagesCopied = clipPages.length;
       } catch (err) {
@@ -251,7 +251,7 @@ async function run(activeTab) {
                 ? stamp + '_' + WW.sanitiseTitle(pages[0].title)
                 : stamp + '_' + pages.length + '-pages';
             const name = WW.uniqueBase(base, taken) + '.md';
-            const text = WW.buildMarkdownFile(pages.map((p) => ({ title: p.title, url: p.url, markdown: p.content })));
+            const text = WW.buildMarkdownFile(pages.map((p) => ({ title: p.title, url: p.url, markdown: WW.stripUrls(p.content, settings) })));
             await downloadBytes(WW.utf8Bytes(text), 'text/markdown', dest + name);
             pagesSaved += pages.length;
             filesSaved += 1;

@@ -106,3 +106,22 @@ test('summary text', () => {
   assert.match(s, /^Saved 2 pages \(2 files\), copied 2 pages to clipboard\./);
   assert.match(s, /1 skipped:\n- Settings: restricted page/);
 });
+
+test('stripUrls drops link and image URLs but keeps text and code blocks', () => {
+  const md = 'See [Docs](https://x.com/d "t") and ![Chart](https://x.com/c.png).\n[![Logo](https://x.com/l.png)](https://x.com)\n![](https://x.com/n.png)\n```\n[a](b) ![c](d)\n```\n';
+  assert.equal(WW.stripUrls(md, {}), md);
+  const noImg = WW.stripUrls(md, { includeImages: false });
+  assert.ok(noImg.includes('[Docs](https://x.com/d "t")'));
+  assert.ok(noImg.includes('[Image: Chart]'));
+  assert.ok(!noImg.includes('c.png') && !noImg.includes('n.png'));
+  const noLink = WW.stripUrls(md, { includeLinks: false });
+  assert.ok(noLink.includes('See Docs and ![Chart](https://x.com/c.png).'));
+  assert.ok(noLink.includes('\n![Logo](https://x.com/l.png)\n') || noLink.includes('[![Logo](https://x.com/l.png)]'));
+  const none = WW.stripUrls(md, { includeLinks: false, includeImages: false });
+  assert.ok(none.includes('See Docs and [Image: Chart].'));
+  assert.ok(none.includes('[Image: Logo]'));
+  assert.ok(none.includes('[a](b) ![c](d)')); // fenced code untouched
+  assert.ok(!none.includes('https://'));
+  assert.equal(WW.sanitiseSettings({}).includeLinks, true);
+  assert.equal(WW.sanitiseSettings({ includeImages: false }).includeImages, false);
+});

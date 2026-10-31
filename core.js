@@ -8,7 +8,9 @@
     download: true,
     format: 'markdown', // 'markdown' | 'pdf'
     content: 'cleaned', // 'cleaned' | 'full' | 'print' (print only with format 'pdf': browser print-to-PDF)
-    destination: 'AI-Captures'
+    destination: 'AI-Captures',
+    includeLinks: true, // Markdown and clipboard only: false keeps link text, drops the URL
+    includeImages: true // Markdown and clipboard only: false turns images into [Image: alt]
   });
 
   const RESTRICTED_PREFIXES = [
@@ -112,6 +114,8 @@
     const s = Object.assign({}, DEFAULT_SETTINGS, raw || {});
     s.clipboard = !!s.clipboard;
     s.download = !!s.download;
+    s.includeLinks = s.includeLinks !== false;
+    s.includeImages = s.includeImages !== false;
     // Legacy value from an earlier build: format 'print' became PDF + content 'print'.
     if (s.format === 'print') {
       s.format = 'pdf';
@@ -123,6 +127,27 @@
     // An explicit empty string means "save straight into Downloads".
     s.destination = s.destination === '' ? '' : sanitiseDestination(s.destination);
     return s;
+  }
+
+  // Drops URLs from Markdown to reduce noise. Images first (so linked images work),
+  // then links. Fenced code blocks are left untouched.
+  const IMG_MD = /!\[([^\]]*)\]\(\s*[^)\s]*(?:\s+"[^"]*")?\s*\)/g;
+  const LINK_MD = /(?<!!)\[((?:[^\[\]]|\[[^\[\]]*\])*)\]\(\s*[^)\s]*(?:\s+"[^"]*")?\s*\)/g;
+
+  function stripUrls(md, opts) {
+    const keepLinks = !opts || opts.includeLinks !== false;
+    const keepImages = !opts || opts.includeImages !== false;
+    if (keepLinks && keepImages) return String(md || '');
+    return String(md || '')
+      .split(/(^```[\s\S]*?^```[^\n]*$)/m)
+      .map((part, i) => {
+        if (i % 2 === 1) return part; // fenced block
+        let t = part;
+        if (!keepImages) t = t.replace(IMG_MD, (_, alt) => (alt.trim() ? '[Image: ' + alt.trim() + ']' : ''));
+        if (!keepLinks) t = t.replace(LINK_MD, (_, text) => text);
+        return t;
+      })
+      .join('');
   }
 
   // One page as Markdown: H1 title, source URL, body.
@@ -204,6 +229,7 @@
     uniqueBase,
     sanitiseDestination,
     sanitiseSettings,
+    stripUrls,
     buildPageMarkdown,
     buildMarkdownFile,
     buildClipboardText,
