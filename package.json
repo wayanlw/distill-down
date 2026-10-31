@@ -5,6 +5,7 @@
   "description": "Chrome MV3 extension: save highlighted tabs as Markdown/PDF and copy to clipboard",
   "scripts": {
     "test": "node --test tests/",
+    "e2e": "playwright test",
     "icons": "node tools/make-icons.js"
   },
   "devDependencies": {
