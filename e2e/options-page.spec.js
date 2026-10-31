@@ -33,3 +33,21 @@ test('settings saved in the options page change what a click does', async ({ ext
   expect(file.requested).toMatch(/\.pdf$/);
   expect(fs.readFileSync(file.filename).toString('latin1').startsWith('%PDF-')).toBe(true);
 });
+
+test('Restore defaults resets the form and the stored settings', async ({ ext }) => {
+  const page = await ext.context.newPage();
+  await page.goto(`chrome-extension://${ext.worker.url().split('/')[2]}/options.html`);
+  await page.check('#download');
+  await page.check('#includeLinks');
+  await page.selectOption('#format', 'pdf');
+  await page.click('#reset');
+  await expect(page.locator('#status')).toHaveText('Saved');
+
+  await expect(page.locator('#clipboard')).toBeChecked();
+  await expect(page.locator('#download')).not.toBeChecked();
+  await expect(page.locator('#includeLinks')).not.toBeChecked();
+  await expect(page.locator('#includeImages')).not.toBeChecked();
+  await expect(page.locator('#format')).toHaveValue('markdown');
+  const stored = await ext.worker.evaluate(() => chrome.storage.sync.get(null));
+  expect(stored).toMatchObject({ clipboard: true, download: false, includeLinks: false, includeImages: false });
+});

@@ -54,4 +54,8 @@ async function save() {
 // Every change saves at once; the Save button stays as a manual fallback.
 for (const el of document.querySelectorAll('input, select')) el.addEventListener('change', save);
 $('save').addEventListener('click', save);
+$('reset').addEventListener('click', async () => {
+  applyForm(WW.sanitiseSettings({}));
+  await save();
+});
 load();

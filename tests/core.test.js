@@ -71,8 +71,16 @@ test('settings sanitising applies defaults and rejects bad values', () => {
   assert.equal(s.format, 'markdown');
   assert.equal(s.content, 'cleaned');
   assert.equal(s.clipboard, true);
-  assert.equal(s.download, true);
+  assert.equal(s.download, false);
   assert.equal(s.destination, 'AI-Captures');
+});
+
+test('defaults suit AI use: clipboard on, download off, no link or image URLs', () => {
+  const s = WW.sanitiseSettings({});
+  assert.deepEqual(
+    { c: s.clipboard, d: s.download, f: s.format, t: s.content, l: s.includeLinks, i: s.includeImages },
+    { c: true, d: false, f: 'markdown', t: 'cleaned', l: false, i: false }
+  );
 });
 
 test('combined clipboard text has source dividers per page', () => {
@@ -122,6 +130,6 @@ test('stripUrls drops link and image URLs but keeps text and code blocks', () =>
   assert.ok(none.includes('[Image: Logo]'));
   assert.ok(none.includes('[a](b) ![c](d)')); // fenced code untouched
   assert.ok(!none.includes('https://'));
-  assert.equal(WW.sanitiseSettings({}).includeLinks, true);
+  assert.equal(WW.sanitiseSettings({ includeLinks: true }).includeLinks, true);
   assert.equal(WW.sanitiseSettings({ includeImages: false }).includeImages, false);
 });

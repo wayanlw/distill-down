@@ -10,8 +10,8 @@ test('clipboard drops the image URL when includeImages is off', async ({ ext }) 
   expect(text).not.toContain('big.png');
 });
 
-test('clipboard keeps the image URL by default', async ({ ext }) => {
-  await ext.setSettings({ clipboard: true, download: false });
+test('clipboard keeps the image URL when includeImages is on', async ({ ext }) => {
+  await ext.setSettings({ clipboard: true, download: false, includeImages: true });
   const p = await ext.open('/image');
   await ext.run(p);
   expect(await ext.readClipboard(p)).toContain('big.png');

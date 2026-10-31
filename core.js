@@ -4,13 +4,13 @@
   'use strict';
 
   const DEFAULT_SETTINGS = Object.freeze({
-    clipboard: false,
-    download: true,
+    clipboard: true,
+    download: false,
     format: 'markdown', // 'markdown' | 'pdf'
     content: 'cleaned', // 'cleaned' | 'full' | 'print' (print only with format 'pdf': browser print-to-PDF)
     destination: 'AI-Captures',
-    includeLinks: true, // Markdown and clipboard only: false keeps link text, drops the URL
-    includeImages: true // Markdown and clipboard only: false turns images into [Image: alt]
+    includeLinks: false, // false keeps link text, drops the URL (Markdown, clipboard, text PDF)
+    includeImages: false // false turns images into [Image: alt]; no pictures in text PDF
   });
 
   const RESTRICTED_PREFIXES = [
@@ -114,8 +114,8 @@
     const s = Object.assign({}, DEFAULT_SETTINGS, raw || {});
     s.clipboard = !!s.clipboard;
     s.download = !!s.download;
-    s.includeLinks = s.includeLinks !== false;
-    s.includeImages = s.includeImages !== false;
+    s.includeLinks = !!s.includeLinks;
+    s.includeImages = !!s.includeImages;
     // Legacy value from an earlier build: format 'print' became PDF + content 'print'.
     if (s.format === 'print') {
       s.format = 'pdf';
