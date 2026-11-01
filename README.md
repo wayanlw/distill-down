@@ -24,7 +24,7 @@ Limits: Cleaned PDF prints characters outside Western European text as "?"; use 
 
 ## Brand and store assets
 
-- `brand/`: logo sources and the brand guide (`BRAND.md`).
+- `brand/`: logo sources.
 - `store/`: Chrome Web Store listing copy.
 - `npm run icons` renders `icons/` from `brand/logo.svg` and `brand/logo-small.svg`.
 
@@ -35,4 +35,6 @@ npm test        # unit tests
 npm run e2e     # Playwright; opens a visible Chromium window and overwrites the system clipboard
 ```
 
-Requirements and decisions: `SPEC.md` and `.handoff/DECISIONS.md`.
+## License
+
+MIT, see [LICENSE](LICENSE). Bundled libraries are listed in [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md).

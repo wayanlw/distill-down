@@ -2,3 +2,14 @@ node_modules/
 scratch/
 .handoff/
 test-results/
+
+# Local notes and internal docs
+.session-sync/
+.claude/
+SPEC.md
+brand/BRAND.md
+
+# Build output and OS files
+*.zip
+Thumbs.db
+.DS_Store
