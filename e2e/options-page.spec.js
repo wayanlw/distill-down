@@ -23,15 +23,14 @@ test('settings saved in the options page change what a click does', async ({ ext
   expect(await ext.downloads()).toHaveLength(0);
 
   await page.check('#download');
-  await page.selectOption('#format', 'pdf');
   await page.uncheck('#clipboard');
   await page.click('#save');
   await expect(page.locator('#status')).toHaveText('Saved');
 
   await ext.run(p);
   const [file] = await ext.waitForDownloads(1);
-  expect(file.requested).toMatch(/\.pdf$/);
-  expect(fs.readFileSync(file.filename).toString('latin1').startsWith('%PDF-')).toBe(true);
+  expect(file.requested).toMatch(/\.md$/);
+  expect(fs.readFileSync(file.filename, 'utf8')).toContain('# WW Image Page');
 });
 
 test('Restore defaults resets the form and the stored settings', async ({ ext }) => {
@@ -40,7 +39,6 @@ test('Restore defaults resets the form and the stored settings', async ({ ext })
   await page.check('#download');
   await page.check('#includeLinks');
   await page.check('#fullSourceUrl');
-  await page.selectOption('#format', 'pdf');
   await page.click('#save');
   await expect(page.locator('#status')).toHaveText('Saved');
   expect(await ext.worker.evaluate(() => chrome.storage.local.get('fullSourceUrl'))).toEqual({ fullSourceUrl: true });
@@ -52,7 +50,6 @@ test('Restore defaults resets the form and the stored settings', async ({ ext })
   await expect(page.locator('#includeLinks')).not.toBeChecked();
   await expect(page.locator('#includeImages')).not.toBeChecked();
   await expect(page.locator('#fullSourceUrl')).not.toBeChecked();
-  await expect(page.locator('#format')).toHaveValue('markdown');
   const stored = await ext.worker.evaluate(() => chrome.storage.local.get(null));
   expect(stored).toMatchObject({ clipboard: true, download: false, includeLinks: false, includeImages: false, fullSourceUrl: false });
 });

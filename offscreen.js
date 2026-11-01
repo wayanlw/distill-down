@@ -15,50 +15,8 @@ function base64ToBytes(b64) {
   return bytes;
 }
 
-const IMG_MAX_W = 1000;
-const IMG_MAX_PIXELS = 40 * 1000 * 1000;
-const JPEG_QUALITY = 0.6;
-
-function bytesToBase64(bytes) {
-  let bin = '';
-  const chunk = 0x8000;
-  for (let i = 0; i < bytes.length; i += chunk) {
-    bin += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
-  }
-  return btoa(bin);
-}
-
-// Decode, downscale to IMG_MAX_W wide, flatten onto white, re-encode as JPEG.
-async function encodeImage(b64, mime) {
-  const blob = new Blob([base64ToBytes(b64)], { type: mime || '' });
-  const bmp = await createImageBitmap(blob);
-  // background.js checks the header first; this catches a header that understated the size.
-  if (bmp.width * bmp.height > IMG_MAX_PIXELS) {
-    bmp.close();
-    throw new Error('image has too many pixels');
-  }
-  const scale = Math.min(1, IMG_MAX_W / bmp.width);
-  const w = Math.max(1, Math.round(bmp.width * scale));
-  const h = Math.max(1, Math.round(bmp.height * scale));
-  const canvas = new OffscreenCanvas(w, h);
-  const ctx = canvas.getContext('2d');
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, w, h);
-  ctx.drawImage(bmp, 0, 0, w, h);
-  bmp.close();
-  const out = await canvas.convertToBlob({ type: 'image/jpeg', quality: JPEG_QUALITY });
-  const bytes = new Uint8Array(await out.arrayBuffer());
-  return { data: bytesToBase64(bytes), width: w, height: h };
-}
-
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (!msg || msg.target !== 'offscreen') return false;
-  if (msg.type === 'encodeImage') {
-    encodeImage(msg.data, msg.mime)
-      .then((r) => sendResponse(Object.assign({ ok: true }, r)))
-      .catch((err) => sendResponse({ ok: false, error: String((err && err.message) || err) }));
-    return true; // async response
-  }
   try {
     if (msg.type === 'copy') {
       copyText(msg.text);

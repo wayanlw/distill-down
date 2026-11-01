@@ -56,16 +56,12 @@ test('destination sanitising keeps it inside Downloads', () => {
   assert.equal(WW.sanitiseDestination(''), 'DD-Captures');
   assert.equal(WW.sanitiseSettings({ destination: '' }).destination, '');
   // Unknown values fall back to the defaults.
-  assert.equal(WW.sanitiseSettings({ format: 'markdown', content: 'print' }).content, 'cleaned');
-  assert.equal(WW.sanitiseSettings({ format: 'bogus' }).format, 'markdown');
-  // Full is Markdown-only; a saved PDF + Full falls back to Cleaned.
-  assert.equal(WW.sanitiseSettings({ format: 'markdown', content: 'full' }).content, 'full');
-  assert.equal(WW.sanitiseSettings({ format: 'pdf', content: 'full' }).content, 'cleaned');
+  assert.equal(WW.sanitiseSettings({ content: 'print' }).content, 'cleaned');
+  assert.equal(WW.sanitiseSettings({ content: 'full' }).content, 'full');
 });
 
 test('settings sanitising applies defaults and rejects bad values', () => {
-  const s = WW.sanitiseSettings({ format: 'docx', content: 'x', clipboard: 1 });
-  assert.equal(s.format, 'markdown');
+  const s = WW.sanitiseSettings({ content: 'x', clipboard: 1 });
   assert.equal(s.content, 'cleaned');
   assert.equal(s.clipboard, true);
   assert.equal(s.download, false);
@@ -75,8 +71,8 @@ test('settings sanitising applies defaults and rejects bad values', () => {
 test('defaults suit AI use: clipboard on, download off, no link or image URLs', () => {
   const s = WW.sanitiseSettings({});
   assert.deepEqual(
-    { c: s.clipboard, d: s.download, f: s.format, t: s.content, l: s.includeLinks, i: s.includeImages },
-    { c: true, d: false, f: 'markdown', t: 'cleaned', l: false, i: false }
+    { c: s.clipboard, d: s.download, t: s.content, l: s.includeLinks, i: s.includeImages },
+    { c: true, d: false, t: 'cleaned', l: false, i: false }
   );
 });
 

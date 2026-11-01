@@ -155,7 +155,7 @@
           <label for="includeImages">Include image URLs</label>
           <input type="checkbox" id="includeImages">
         </div>
-        <p class="hint">Off keeps the link text and drops the address; images become [Image: description]. In a PDF, off also means no pictures are embedded.</p>
+        <p class="hint">Off keeps the link text and drops the address; images become [Image: description].</p>
         <div class="row">
           <label for="fullSourceUrl">Include full source address</label>
           <input type="checkbox" id="fullSourceUrl">
@@ -171,20 +171,13 @@
         </div>
         <div id="downloadSub" class="sub">
           <div class="row">
-            <label for="format">Format</label>
-            <select id="format">
-              <option value="markdown">Markdown</option>
-              <option value="pdf">PDF</option>
-            </select>
-          </div>
-          <div class="row">
             <label for="content">Content</label>
             <select id="content">
               <option value="cleaned">Cleaned (main content only)</option>
-              <option value="full">Full (entire page, Markdown only)</option>
+              <option value="full">Full (entire page)</option>
             </select>
           </div>
-          <p class="hint">Not used for the clipboard, which is always Cleaned. Cleaned PDF supports Western European characters only; others print as "?". Use Markdown for other scripts or mathematical notation.</p>
+          <p class="hint">The downloaded file is always Markdown. Not used for the clipboard, which is always Cleaned.</p>
           <div class="row">
             <label for="destination">Destination folder (inside Downloads)</label>
             <input type="text" id="destination" placeholder="DD-Captures">
@@ -198,7 +191,7 @@
         <span id="status" role="status"></span>
       </div>
 
-      <footer>Pages are converted in your browser and are never sent to the developer or an AI service. A PDF with images downloads those images from the sites that host them.</footer>
+      <footer>Pages are converted in your browser and are never sent to the developer or an AI service. Distill Down makes no network requests.</footer>
     </main>
 
     <script src="core.js"></script>

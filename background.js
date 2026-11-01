@@ -1,13 +1,8 @@
 // Service worker: toolbar click -> select tabs -> extract -> clipboard / download -> notify.
-importScripts('core.js', 'pdf.js');
+importScripts('core.js');
 
 const WW = self.WW;
-const WWPdf = self.WWPdf;
 const NOTIFY_ICON = 'icons/icon128.png';
-const IMAGE_TIMEOUT_MS = 10000;
-const IMAGES_BUDGET_MS = 60000; // per page; no new image fetches start after this
-const IMAGE_MAX_BYTES = 15 * 1024 * 1024;
-const IMAGE_MAX_PIXELS = 40 * 1000 * 1000;
 const DOWNLOAD_TIMEOUT_MS = 5 * 60 * 1000; // long enough for a "save as" dialog
 
 let running = false;
@@ -98,75 +93,6 @@ function waitForDownload(id) {
       if (item) settle(item.state, item.error);
     }, () => {});
   });
-}
-
-// Rejects if the promise takes longer than ms.
-function withTimeout(promise, ms, message) {
-  let timer;
-  const limit = new Promise((_, reject) => {
-    timer = setTimeout(() => reject(new Error(message)), ms);
-  });
-  return Promise.race([promise, limit]).finally(() => clearTimeout(timer));
-}
-
-// Decodes run one at a time. createImageBitmap cannot be cancelled, so a decode that
-// times out has its offscreen document closed before the next one starts.
-let encodeChain = Promise.resolve();
-
-function encodeImage(bytes, mime) {
-  const job = encodeChain.then(async () => {
-    try {
-      return await withTimeout(
-        offscreenMessage({ type: 'encodeImage', data: WW.bytesToBase64(bytes), mime }),
-        IMAGE_TIMEOUT_MS,
-        'image decode timed out'
-      );
-    } catch (err) {
-      await chrome.offscreen.closeDocument().catch(() => {});
-      throw err;
-    }
-  });
-  encodeChain = job.catch(() => {});
-  return job;
-}
-
-// Fetch each image (host permission allows cross-origin), encode as JPEG in the
-// offscreen document. Failures are left out of the map and fall back to text in pdf.js.
-// Image URLs are chosen by the page, so time, size and destination are all limited.
-async function resolveImages(urls, pageUrl) {
-  const map = new Map();
-  const deadline = Date.now() + IMAGES_BUDGET_MS;
-  for (let i = 0; i < urls.length && Date.now() < deadline; i += 4) {
-    await Promise.all(
-      urls.slice(i, i + 4).map(async (u) => {
-        const ctl = new AbortController();
-        const timer = setTimeout(() => ctl.abort(), IMAGE_TIMEOUT_MS);
-        try {
-          if (!WW.isImageUrlAllowed(u, pageUrl)) throw new Error('private-network image from a public page');
-          // Redirects are refused: a followed redirect would reach its destination before it could be checked.
-          const r = await fetch(u, { signal: ctl.signal, credentials: 'omit', redirect: 'error' });
-          const type = r.headers.get('content-type') || '';
-          // Some CDNs serve images as octet-stream; the decoder decides.
-          if (!r.ok || !(type.startsWith('image/') || type.startsWith('application/octet-stream'))) {
-            ctl.abort();
-            return;
-          }
-          // The timer keeps running here, so a body that never ends is cut off too.
-          const buf = await WW.readBodyLimited(r, IMAGE_MAX_BYTES);
-          clearTimeout(timer);
-          if (!WW.imageWithinPixelLimit(buf, IMAGE_MAX_PIXELS)) throw new Error('image too large or format not readable');
-          const res = await encodeImage(buf, type);
-          if (res && res.ok) {
-            map.set(u, { jpeg: WW.base64ToBytes(res.data), width: res.width, height: res.height });
-          }
-        } catch (err) {
-          clearTimeout(timer);
-          console.warn('[ww] image fallback to text', u, err && err.message);
-        }
-      })
-    );
-  }
-  return map;
 }
 
 // Injects extraction into one tab and returns { title, url, cleaned, full, selection }.
@@ -288,42 +214,24 @@ async function run(activeTab) {
         }
       }
 
-      if (settings.format === 'markdown') {
-        if (pages.length > 0) {
-          try {
-            const base =
-              pages.length === 1
-                ? stamp + '_' + WW.sanitiseTitle(pages[0].title)
-                : stamp + '_' + pages.length + '-pages';
-            const name = WW.uniqueBase(base, taken) + '.md';
-            const text = WW.buildMarkdownFile(pages.map((p) => ({
-              title: p.title,
-              url: WW.formatSourceUrl(p.url, settings.fullSourceUrl),
-              markdown: WW.stripUrls(p.content, settings)
-            })));
-            await downloadBytes(WW.utf8Bytes(text), 'text/markdown', dest + name);
-            pagesSaved += pages.length;
-            filesSaved += 1;
-          } catch (err) {
-            console.error('[ww] markdown download failed', err);
-            failures.push('Download failed: ' + err.message);
-          }
-        }
-      } else {
-        for (const p of pages) {
-          try {
-            const name = WW.uniqueBase(stamp + '_' + WW.sanitiseTitle(p.title), taken) + '.pdf';
-            // Images off: they become "[Image: alt]" text, so none are fetched or embedded.
-            const md = WW.stripUrls(p.content, settings);
-            const images = settings.includeImages ? await resolveImages(WWPdf.collectImageUrls(md), p.url) : new Map();
-            const bytes = await WWPdf.buildPdf(p.title, WW.formatSourceUrl(p.url, settings.fullSourceUrl), md, images);
-            await downloadBytes(bytes, 'application/pdf', dest + name);
-            pagesSaved += 1;
-            filesSaved += 1;
-          } catch (err) {
-            console.error('[ww] pdf failed', p.url, err);
-            skipped.push({ title: p.title, url: p.url, reason: 'PDF failed: ' + err.message });
-          }
+      if (pages.length > 0) {
+        try {
+          const base =
+            pages.length === 1
+              ? stamp + '_' + WW.sanitiseTitle(pages[0].title)
+              : stamp + '_' + pages.length + '-pages';
+          const name = WW.uniqueBase(base, taken) + '.md';
+          const text = WW.buildMarkdownFile(pages.map((p) => ({
+            title: p.title,
+            url: WW.formatSourceUrl(p.url, settings.fullSourceUrl),
+            markdown: WW.stripUrls(p.content, settings)
+          })));
+          await downloadBytes(WW.utf8Bytes(text), 'text/markdown', dest + name);
+          pagesSaved += pages.length;
+          filesSaved += 1;
+        } catch (err) {
+          console.error('[ww] markdown download failed', err);
+          failures.push('Download failed: ' + err.message);
         }
       }
     }

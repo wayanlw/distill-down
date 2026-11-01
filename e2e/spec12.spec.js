@@ -4,7 +4,7 @@ const fs = require('fs');
 const { test, expect, MARKERS } = require('./fixtures');
 
 test('1. single tab, Markdown download only', async ({ ext }) => {
-  await ext.setSettings({ clipboard: false, download: true, format: 'markdown', content: 'cleaned' });
+  await ext.setSettings({ clipboard: false, download: true, content: 'cleaned' });
   const p = await ext.open('/one');
   const note = await ext.run(p);
   expect(note).toMatch(/^Saved 1 page \(1 file\)\./);
@@ -29,17 +29,16 @@ test('2. single tab, clipboard only', async ({ ext }) => {
   expect(await ext.downloads()).toEqual([]);
 });
 
-test('3. both on, PDF format', async ({ ext }) => {
-  await ext.setSettings({ clipboard: true, download: true, format: 'pdf', content: 'cleaned' });
+test('3. both on, Markdown file and clipboard', async ({ ext }) => {
+  await ext.setSettings({ clipboard: true, download: true, content: 'cleaned' });
   const p = await ext.open('/one');
   await ext.setClipboard(p, 'SENTINEL');
   const note = await ext.run(p);
   expect(note).toMatch(/^Saved 1 page \(1 file\), copied 1 page to clipboard\./);
 
   const [file] = await ext.waitForDownloads(1);
-  expect(file.requested).toMatch(/^DD-Captures\/\d{8}_\d{6}_WW Page One\.pdf$/);
-  const bytes = fs.readFileSync(file.filename);
-  expect(bytes.subarray(0, 5).toString('latin1')).toBe('%PDF-');
+  expect(file.requested).toMatch(/^DD-Captures\/\d{8}_\d{6}_WW Page One\.md$/);
+  expect(fs.readFileSync(file.filename, 'utf8')).toContain(MARKERS.one);
   expect(await ext.readClipboard(p)).toContain(MARKERS.one);
 });
 
@@ -52,7 +51,7 @@ test('4. both off, notification shown', async ({ ext }) => {
 });
 
 test('5. three highlighted tabs, one restricted, summary is correct', async ({ ext }) => {
-  await ext.setSettings({ clipboard: true, download: true, format: 'markdown', content: 'cleaned' });
+  await ext.setSettings({ clipboard: true, download: true, content: 'cleaned' });
   const one = await ext.open('/one');
   const two = await ext.open('/two');
   const blank = await ext.context.newPage(); // about:blank is a restricted page
@@ -84,7 +83,7 @@ test('5. three highlighted tabs, one restricted, summary is correct', async ({ e
 });
 
 test('6. navigation and footer absent from Cleaned, present in Full', async ({ ext }) => {
-  await ext.setSettings({ clipboard: false, download: true, format: 'markdown', content: 'cleaned' });
+  await ext.setSettings({ clipboard: false, download: true, content: 'cleaned' });
   const p = await ext.open('/nav');
   await ext.run(p);
   const [cleaned] = await ext.waitForDownloads(1);
@@ -93,7 +92,7 @@ test('6. navigation and footer absent from Cleaned, present in Full', async ({ e
   expect(cleanedText).not.toContain('NAVTEXT-MENU-ITEM');
   expect(cleanedText).not.toContain('FOOTERTEXT-COPYRIGHT');
 
-  await ext.setSettings({ clipboard: false, download: true, format: 'markdown', content: 'full' });
+  await ext.setSettings({ clipboard: false, download: true, content: 'full' });
   await ext.run(p);
   const files = await ext.waitForDownloads(2);
   const fullText = fs.readFileSync(files[files.length - 1].filename, 'utf8');

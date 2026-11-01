@@ -5,7 +5,6 @@ function readForm() {
   return {
     clipboard: $('clipboard').checked,
     download: $('download').checked,
-    format: $('format').value,
     content: $('content').value,
     destination: $('destination').value,
     includeLinks: $('includeLinks').checked,
@@ -17,15 +16,11 @@ function readForm() {
 function applyForm(s) {
   $('clipboard').checked = s.clipboard;
   $('download').checked = s.download;
-  $('format').value = s.format;
   $('content').value = s.content;
   $('destination').value = s.destination;
   $('includeLinks').checked = s.includeLinks;
   $('includeImages').checked = s.includeImages;
   $('fullSourceUrl').checked = s.fullSourceUrl;
-  // Full exists only for Markdown.
-  const fullOpt = $('content').querySelector('option[value="full"]');
-  fullOpt.disabled = fullOpt.hidden = s.format !== 'markdown';
   const sub = $('downloadSub');
   sub.classList.toggle('off', !s.download);
   for (const el of sub.querySelectorAll('select, input')) el.disabled = !s.download;
