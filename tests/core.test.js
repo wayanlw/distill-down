@@ -126,3 +126,22 @@ test('stripUrls drops link and image URLs but keeps text and code blocks', () =>
   assert.equal(WW.sanitiseSettings({ includeLinks: true }).includeLinks, true);
   assert.equal(WW.sanitiseSettings({ includeImages: false }).includeImages, false);
 });
+
+test('tidyMarkdown removes invisible spaces, empty structures and blank runs', () => {
+  const messy = ['Intro text​ here', '   ', '\t', '', '', '## ', '', '- ', '- real item', '1.', '', '[](https://x.test/icon)', '', 'After'].join('\n');
+  assert.equal(WW.tidyMarkdown(messy), 'Intro text here\n\n- real item\n\nAfter');
+});
+
+test('tidyMarkdown keeps code blocks, images, linked text and hard line breaks', () => {
+  const md = 'Line one  \nLine two\n\n![](https://x.test/p.png)\n\n[text](https://x.test)\n\n```\ncode\n\n\n\n  \nmore\n```\n\n\n\nEnd';
+  assert.equal(
+    WW.tidyMarkdown(md),
+    'Line one  \nLine two\n\n![](https://x.test/p.png)\n\n[text](https://x.test)\n\n```\ncode\n\n\n\n  \nmore\n```\n\nEnd'
+  );
+});
+
+test('page and clipboard text use tidied Markdown', () => {
+  const page = { title: 'T', url: '', markdown: 'A\n\n\n\n\nB' };
+  assert.equal(WW.buildPageMarkdown(page), '# T\n\nA\n\nB\n');
+  assert.equal(WW.buildClipboardText([page]), '---\nSource: T\n---\nA\n\nB\n');
+});

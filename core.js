@@ -150,11 +150,31 @@
       .join('');
   }
 
+  // Removes the blank gaps pages leave behind: invisible spaces, whitespace-only lines,
+  // empty headings, list items and links, and runs of blank lines. Fenced code blocks
+  // are left untouched. Trailing spaces on text lines stay: two of them are a line break.
+  function tidyMarkdown(md) {
+    return String(md || '')
+      .split(/(^```[\s\S]*?^```[^\n]*$)/m)
+      .map((part, i) => {
+        if (i % 2 === 1) return part; // fenced block
+        return part
+          .replace(/[​-‍⁠﻿]/g, '')
+          .replace(/ /g, ' ')
+          .replace(/(?<!!)\[\s*\]\([^)]*\)/g, '')
+          .replace(/^[ \t]*(?:#{1,6}|[-*+]|\d+\.)[ \t]*$/gm, '')
+          .replace(/^[ \t]+$/gm, '')
+          .replace(/\n{3,}/g, '\n\n');
+      })
+      .join('')
+      .trim();
+  }
+
   // One page as Markdown: H1 title, source URL (if any), body.
   function buildPageMarkdown(page) {
     const title = String(page.title || '').trim() || 'Untitled';
     const source = page.url ? page.url + '\n\n' : '';
-    return '# ' + title + '\n\n' + source + String(page.markdown || '').trim() + '\n';
+    return '# ' + title + '\n\n' + source + tidyMarkdown(page.markdown) + '\n';
   }
 
   // Several pages in one Markdown file, separated by a horizontal rule.
@@ -168,7 +188,7 @@
       .map((p) => {
         const title = String(p.title || '').trim() || 'Untitled';
         const source = p.url ? title + ' \u2014 ' + p.url : title;
-        return '---\nSource: ' + source + '\n---\n' + String(p.markdown || '').trim() + '\n';
+        return '---\nSource: ' + source + '\n---\n' + tidyMarkdown(p.markdown) + '\n';
       })
       .join('\n');
   }
@@ -225,6 +245,7 @@
     sanitiseSettings,
     formatSourceUrl,
     stripUrls,
+    tidyMarkdown,
     buildPageMarkdown,
     buildMarkdownFile,
     buildClipboardText,
