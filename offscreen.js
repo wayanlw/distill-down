@@ -31,22 +31,7 @@ function bytesToBase64(bytes) {
 // Decode, downscale to IMG_MAX_W wide, flatten onto white, re-encode as JPEG.
 async function encodeImage(b64, mime) {
   const blob = new Blob([base64ToBytes(b64)], { type: mime || '' });
-  let bmp;
-  try {
-    bmp = await createImageBitmap(blob);
-  } catch (e) {
-    // SVG blobs cannot go through createImageBitmap; decode them with an <img>.
-    const url = URL.createObjectURL(new Blob([base64ToBytes(b64)], { type: mime || 'image/svg+xml' }));
-    try {
-      const img = new Image();
-      img.src = url;
-      await img.decode();
-      if (img.naturalWidth * img.naturalHeight > IMG_MAX_PIXELS) throw new Error('image has too many pixels');
-      bmp = await createImageBitmap(img, { resizeWidth: Math.min(IMG_MAX_W, img.naturalWidth || IMG_MAX_W) });
-    } finally {
-      URL.revokeObjectURL(url);
-    }
-  }
+  const bmp = await createImageBitmap(blob);
   // background.js checks the header first; this catches a header that understated the size.
   if (bmp.width * bmp.height > IMG_MAX_PIXELS) {
     bmp.close();

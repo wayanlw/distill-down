@@ -191,6 +191,11 @@ const PAGES = {
     inside:
       '<p><img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" data-src="/big.png?from=never-displayed" alt="Lazy"></p>'
   }),
+  '/svgimage': page('WW SVG Image Page', MARKERS.image, {
+    // In data-src so the browser does not render it while the page loads.
+    inside:
+      '<p><img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" data-src="/vector.svg" alt="Vector picture"></p>'
+  }),
   '/hugedimensions': page('WW Huge Dimensions Page', MARKERS.image, {
     inside: '<p><img src="/huge-dimensions.png" alt="Huge dimensions"></p>'
   }),
@@ -231,6 +236,11 @@ const test = base.test.extend({
         if (route === '/redirect.png') {
           res.writeHead(302, { location: '/big.png?from=redirect' });
           res.end();
+          return;
+        }
+        if (route === '/vector.svg') {
+          res.writeHead(200, { 'content-type': 'image/svg+xml' });
+          res.end('<svg xmlns="http://www.w3.org/2000/svg" width="100000" height="100000"><rect width="100%" height="100%"/></svg>');
           return;
         }
         if (route === '/huge-dimensions.png') {

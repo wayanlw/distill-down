@@ -223,14 +223,11 @@
   }
 
   // Whether an image may be decoded. Decides from the bytes, never the server's content
-  // type, which could label a huge PNG as SVG. SVG has no raster header; offscreen.js
-  // checks its size before drawing it. Unreadable formats are refused.
+  // type. Formats without a readable size are refused; that includes SVG, whose rendering
+  // cost its header cannot bound.
   function imageWithinPixelLimit(bytes, maxPixels) {
     const found = readImageSize(bytes);
-    if (found) return found.width * found.height <= maxPixels;
-    let i = bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf ? 3 : 0;
-    while (i < bytes.length && [0x20, 0x09, 0x0a, 0x0d].includes(bytes[i])) i++;
-    return bytes[i] === 0x3c; // "<": SVG text
+    return !!found && found.width * found.height <= maxPixels;
   }
 
   // A public page may not point the extension at a private-network image.

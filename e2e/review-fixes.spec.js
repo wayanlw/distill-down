@@ -80,6 +80,17 @@ test('oversized dimensions are refused without ever reaching the decoder', async
   expect(await ext.worker.evaluate(() => self.__encodeCount)).toBe(0);
 });
 
+test('an SVG image is refused before decoding and the PDF still saves', async ({ ext, site }) => {
+  await ext.setSettings(PDF_IMAGES);
+  const p = await ext.open('/svgimage');
+  const note = await ext.run(p);
+  expect(note).toContain('Saved 1 page');
+  expect(site.requests).toContain('/vector.svg');
+  expect(await ext.worker.evaluate(() => self.__encodeCount)).toBe(0);
+  const [file] = await ext.waitForDownloads(1);
+  expect(fs.readFileSync(file.filename).toString('latin1')).not.toContain('/Subtype /Image');
+});
+
 test('a stuck decode closes the offscreen document and the next image still embeds', async ({ ext }) => {
   await ext.setSettings(PDF_IMAGES);
   const p = await ext.open('/twoimages');

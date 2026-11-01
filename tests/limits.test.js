@@ -120,7 +120,8 @@ test('pixel limit: decided from the bytes, before any decoding', () => {
   const limit = 40 * 1000 * 1000;
   assert.equal(WW.imageWithinPixelLimit(png(1000, 1000), limit), true);
   assert.equal(WW.imageWithinPixelLimit(png(30000, 30000), limit), false);
-  assert.equal(WW.imageWithinPixelLimit(new Uint8Array(Buffer.from('  <svg></svg>')), limit), true);
+  assert.equal(WW.imageWithinPixelLimit(new Uint8Array(Buffer.from('  <svg></svg>')), limit), false);
+  assert.equal(WW.imageWithinPixelLimit(new Uint8Array(Buffer.from('<svg width="100000" height="100000"></svg>')), limit), false);
   assert.equal(WW.imageWithinPixelLimit(new Uint8Array(Buffer.from('BM unsupported')), limit), false);
   assert.equal(WW.imageWithinPixelLimit(new Uint8Array(0), limit), false);
 });
