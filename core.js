@@ -6,8 +6,7 @@
   const DEFAULT_SETTINGS = Object.freeze({
     clipboard: true,
     download: false,
-    content: 'cleaned', // 'cleaned' | 'full' (downloaded file only)
-    destination: 'DD-Captures',
+    destination: 'dd-captures',
     includeLinks: false, // false keeps link text, drops the URL (Markdown file and clipboard)
     includeImages: false, // false turns images into [Image: alt]
     fullSourceUrl: false, // false drops the query and fragment from the source address
@@ -127,7 +126,6 @@
     s.wrapClipboard = !!s.wrapClipboard;
     // Empty or invalid falls back to the default.
     s.wrapTag = isValidTagName(String(s.wrapTag).trim()) ? String(s.wrapTag).trim() : DEFAULT_SETTINGS.wrapTag;
-    if (s.content !== 'cleaned' && s.content !== 'full') s.content = DEFAULT_SETTINGS.content;
     // An explicit empty string means "save straight into Downloads".
     s.destination = s.destination === '' ? '' : sanitiseDestination(s.destination);
     return s;

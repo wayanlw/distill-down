@@ -5,7 +5,6 @@ function readForm() {
   return {
     clipboard: $('clipboard').checked,
     download: $('download').checked,
-    content: $('content').value,
     destination: $('destination').value,
     includeLinks: $('includeLinks').checked,
     includeImages: $('includeImages').checked,
@@ -27,9 +26,10 @@ function tagFromField() {
 function showTagHint() {
   const v = $('wrapTag').value.trim();
   const bad = v !== '' && !WW.isValidTagName(v);
+  const tag = tagFromField();
   $('wrapTagHint').textContent = bad
-    ? 'Not saved. Use letters, digits, - or _, starting with a letter or _ (up to 40). Still using <' + savedTag + '>.'
-    : 'The clipboard text is wrapped as <' + tagFromField() + '> ... </' + tagFromField() + '>. Empty uses "input".';
+    ? 'Not saved. Use letters, numbers, - or _, and start with a letter (up to 40 characters). Still using <' + tag + '>.'
+    : 'The copied text starts with <' + tag + '> and ends with </' + tag + '>. Leave empty to use "input".';
   $('wrapTagHint').classList.toggle('error', bad);
   $('wrapTag').setAttribute('aria-invalid', String(bad));
 }
@@ -38,7 +38,6 @@ function showTagHint() {
 function applyForm(s, setTag = true) {
   $('clipboard').checked = s.clipboard;
   $('download').checked = s.download;
-  $('content').value = s.content;
   $('destination').value = s.destination;
   $('includeLinks').checked = s.includeLinks;
   $('includeImages').checked = s.includeImages;

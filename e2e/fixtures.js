@@ -100,7 +100,7 @@ const PAGES = {
     before: '<nav><ul><li><a href="/x">NAVTEXT-MENU-ITEM</a></li><li><a href="/y">NAVTEXT-OTHER</a></li></ul></nav>',
     after: '<footer><p>FOOTERTEXT-COPYRIGHT</p></footer>'
   }),
-  // Readability finds no article here, but Full still has text.
+  // Readability finds no article here.
   '/nocontent': '<!doctype html><html><head><title>WW No Content</title></head><body><button>BUTTON-ONLY-TEXT</button></body></html>',
   '/lazyuntouched': page('WW Lazy Untouched Page', MARKERS.image, {
     inside:

@@ -95,12 +95,12 @@ function waitForDownload(id) {
   });
 }
 
-// Injects extraction into one tab and returns { title, url, cleaned, full, selection }.
-async function extractTab(tab, modes, useSelection) {
+// Injects extraction into one tab and returns { title, url, cleaned, selection }.
+async function extractTab(tab, useSelection) {
   if (WW.isRestrictedUrl(tab.url)) throw new WW.SkipError('restricted page (cannot read content)');
   const target = { tabId: tab.id };
   try {
-    await chrome.scripting.executeScript({ target, func: (o) => { window.__wwOpts = o; }, args: [{ modes, useSelection }] });
+    await chrome.scripting.executeScript({ target, func: (o) => { window.__wwOpts = o; }, args: [{ useSelection }] });
     await chrome.scripting.executeScript({
       target,
       files: ['lib/Readability.js', 'lib/turndown.js', 'extract.js']
@@ -140,10 +140,6 @@ async function run(activeTab) {
     const highlighted = await chrome.tabs.query({ highlighted: true, currentWindow: true });
     const tabs = WW.pickTabs(highlighted, activeTab);
 
-    const modes = [];
-    if (behaviour.clipboard) modes.push('cleaned');
-    if (behaviour.download && !modes.includes(settings.content)) modes.push(settings.content);
-
     const skipped = [];
     const failures = [];
     const extracted = [];
@@ -151,13 +147,12 @@ async function run(activeTab) {
     for (const tab of tabs) {
       try {
         // Only the active tab: other highlighted tabs are always captured whole.
-        const res = await extractTab(tab, modes, !!activeTab && tab.id === activeTab.id);
+        const res = await extractTab(tab, !!activeTab && tab.id === activeTab.id);
         selectionFound = selectionFound || res.selection;
         extracted.push({
           title: res.selection ? (res.title || 'Untitled') + ' (selection)' : res.title,
           url: res.url,
-          cleaned: res.cleaned,
-          content: settings.content === 'full' ? res.full : res.cleaned
+          markdown: res.cleaned
         });
       } catch (err) {
         const reason = err instanceof WW.SkipError ? err.message : String(err && err.message);
@@ -175,67 +170,47 @@ async function run(activeTab) {
     let pagesSaved = 0;
     let filesSaved = 0;
 
-    // Clipboard: always Cleaned, always combined Markdown.
+    // Clipboard: one combined Markdown text.
     if (behaviour.clipboard) {
       try {
-        const clipPages = extracted.filter((p) => p.cleaned);
-        // No Cleaned text: leave whatever the user has on the clipboard alone.
-        if (clipPages.length === 0) {
-          failures.push('Clipboard not changed: no main content found.');
-        } else {
-          let clipText = WW.buildClipboardText(clipPages.map((p) => ({
-            title: p.title,
-            url: WW.formatSourceUrl(p.url, settings.fullSourceUrl),
-            markdown: WW.stripUrls(p.cleaned, settings)
-          })));
-          if (settings.wrapClipboard) clipText = WW.wrapClipboardText(clipText, settings.wrapTag);
-          await copyToClipboard(clipText);
-          pagesCopied = clipPages.length;
-          if (clipPages.length < extracted.length) {
-            const missing = extracted.length - clipPages.length;
-            failures.push('Clipboard left out ' + missing + ' of ' + extracted.length + ' pages: no main content found.');
-          }
-        }
+        let clipText = WW.buildClipboardText(extracted.map((p) => ({
+          title: p.title,
+          url: WW.formatSourceUrl(p.url, settings.fullSourceUrl),
+          markdown: WW.stripUrls(p.markdown, settings)
+        })));
+        if (settings.wrapClipboard) clipText = WW.wrapClipboardText(clipText, settings.wrapTag);
+        await copyToClipboard(clipText);
+        pagesCopied = extracted.length;
       } catch (err) {
         console.error('[ww] clipboard failed', err);
         failures.push('Clipboard failed: ' + err.message);
       }
     }
 
-    // Download: independent of clipboard result.
+    // File: independent of the clipboard result.
     if (behaviour.download) {
       const stamp = WW.timestamp(new Date());
       const taken = new Set();
       const dest = settings.destination ? settings.destination + '/' : '';
-      const pages = extracted.filter((p) => p.content);
-      if (pages.length < extracted.length) {
-        for (const p of extracted.filter((x) => !x.content)) {
-          skipped.push({ title: p.title, url: p.url, reason: 'no content extracted for ' + settings.content + ' mode' });
-        }
-      }
-
-      if (pages.length > 0) {
-        try {
-          const base =
-            pages.length === 1
-              ? stamp + '_' + WW.sanitiseTitle(pages[0].title)
-              : stamp + '_' + pages.length + '-pages';
-          const name = WW.uniqueBase(base, taken) + '.md';
-          const text = WW.buildMarkdownFile(pages.map((p) => ({
-            title: p.title,
-            url: WW.formatSourceUrl(p.url, settings.fullSourceUrl),
-            markdown: WW.stripUrls(p.content, settings)
-          })));
-          await downloadBytes(WW.utf8Bytes(text), 'text/markdown', dest + name);
-          pagesSaved += pages.length;
-          filesSaved += 1;
-        } catch (err) {
-          console.error('[ww] markdown download failed', err);
-          failures.push('Download failed: ' + err.message);
-        }
+      try {
+        const base =
+          extracted.length === 1
+            ? stamp + '_' + WW.sanitiseTitle(extracted[0].title)
+            : stamp + '_' + extracted.length + '-pages';
+        const name = WW.uniqueBase(base, taken) + '.md';
+        const text = WW.buildMarkdownFile(extracted.map((p) => ({
+          title: p.title,
+          url: WW.formatSourceUrl(p.url, settings.fullSourceUrl),
+          markdown: WW.stripUrls(p.markdown, settings)
+        })));
+        await downloadBytes(WW.utf8Bytes(text), 'text/markdown', dest + name);
+        pagesSaved = extracted.length;
+        filesSaved = 1;
+      } catch (err) {
+        console.error('[ww] markdown download failed', err);
+        failures.push('Download failed: ' + err.message);
       }
     }
-
     const notes = [];
     if (selectionFound) notes.push('Selection only from the active tab.');
 

@@ -36,20 +36,24 @@
         color: var(--text);
         font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
       }
-      main { max-width: 600px; margin: 0 auto; padding: 32px 16px 48px; }
+      main { max-width: 600px; margin: 0 auto; padding: 18px 16px 16px; }
 
-      header { display: flex; align-items: center; gap: 16px; margin-bottom: 28px; }
-      header img { width: 56px; height: 56px; border-radius: 14px; }
+      header { display: flex; align-items: center; gap: 16px; margin-bottom: 14px; }
+      header img { width: 44px; height: 44px; border-radius: 12px; }
       h1 { font-size: 24px; line-height: 1.2; margin: 0; letter-spacing: -0.01em; }
       .tagline { margin: 2px 0 0; color: var(--muted); }
       .tagline b { color: var(--amber-deep); font-weight: 600; }
+
+      .usp { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 6px; }
+      .usp li { padding: 8px 12px; background: var(--card); border: 1px solid var(--line); border-left: 3px solid var(--amber); border-radius: 10px; font-size: 12px; color: var(--muted); }
+      .usp b { color: var(--text); }
 
       section {
         background: var(--card);
         border: 1px solid var(--line);
         border-radius: 14px;
-        padding: 4px 20px 16px;
-        margin-bottom: 16px;
+        padding: 2px 16px 8px;
+        margin-bottom: 12px;
       }
       h2 {
         font-size: 12px;
@@ -57,14 +61,18 @@
         text-transform: uppercase;
         letter-spacing: 0.08em;
         color: var(--muted);
-        margin: 16px 0 4px;
+        margin: 12px 0 2px;
       }
-      .row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 10px 0; }
-      .row label { flex: 1; font-weight: 500; }
-      .hint { color: var(--muted); font-size: 12px; margin: 0 0 4px; }
+      /* One option = its label row plus its description. The description sits close to its own
+         label; a rule and more space separate one option from the next. */
+      .opt { padding: 8px 0; }
+      .opt + .opt { border-top: 1px solid var(--line); }
+      .row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+      .row label { flex: 1; font-weight: 600; }
+      .hint { color: var(--muted); font-size: 11px; line-height: 1.5; margin: 3px 0 0; padding-right: 48px; }
       .hint.error { color: #b3261e; }
       @media (prefers-color-scheme: dark) { .hint.error { color: #ff8a80; } }
-      .sub { margin-top: 4px; padding-left: 16px; border-left: 3px solid var(--amber); transition: opacity 0.15s; }
+      .sub { margin-top: 8px; padding-left: 16px; border-left: 3px solid var(--amber); transition: opacity 0.15s; }
       .sub.off { opacity: 0.4; }
 
       select, input[type=text] {
@@ -108,7 +116,7 @@
       input[type=checkbox]:checked::after { transform: translateX(16px); }
       input[type=checkbox]:disabled { cursor: default; }
 
-      .actions { display: flex; align-items: center; gap: 12px; margin-top: 24px; }
+      .actions { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
       button {
         padding: 9px 20px;
         font: inherit;
@@ -120,7 +128,7 @@
       @media (prefers-color-scheme: dark) { #save { background: var(--amber); color: #1c1b3a; border-color: var(--amber); } }
       #reset { background: transparent; color: var(--text); border: 1px solid var(--line); }
       #status { color: var(--amber-deep); font-weight: 500; }
-      footer { margin-top: 32px; color: var(--muted); font-size: 12px; }
+      footer { margin-top: 12px; color: var(--muted); font-size: 12px; }
 
       @media (max-width: 480px) {
         .row { flex-wrap: wrap; }
@@ -138,73 +146,87 @@
         </div>
       </header>
 
+      <ul class="usp">
+        <li><b>One setup, then one click.</b> Choose your settings once. After that, every capture is a single click on the toolbar icon.</li>
+        <li><b>Many tabs at once.</b> Select several tabs (Ctrl or Shift and click), then click once. They become one combined document.</li>
+      </ul>
+
       <section>
         <h2>Clipboard</h2>
-        <div class="row">
-          <label for="clipboard">Copy to clipboard</label>
-          <input type="checkbox" id="clipboard">
-        </div>
-        <p class="hint">Copies one combined Markdown text (Cleaned). Always Markdown.</p>
-        <div class="row">
-          <label for="wrapClipboard">Wrap in a tag</label>
-          <input type="checkbox" id="wrapClipboard">
-        </div>
-        <div id="wrapSub" class="sub">
+        <div class="opt">
           <div class="row">
-            <label for="wrapTag">Tag name</label>
-            <input type="text" id="wrapTag" placeholder="input" maxlength="40" autocomplete="off" spellcheck="false">
+            <label for="clipboard">Copy to clipboard</label>
+            <input type="checkbox" id="clipboard">
           </div>
-          <p class="hint" id="wrapTagHint">The clipboard text is wrapped as &lt;input&gt; ... &lt;/input&gt;. Empty uses "input".</p>
+          <p class="hint">Page text on your clipboard, ready to paste into an AI chat.</p>
+        </div>
+        <div class="opt">
+          <div class="row">
+            <label for="wrapClipboard">Add a label around it</label>
+            <input type="checkbox" id="wrapClipboard">
+          </div>
+          <p class="hint">Marks where the page starts and ends, so an AI can tell it from your instructions.</p>
+          <div id="wrapSub" class="sub">
+            <div class="row">
+              <label for="wrapTag">Label name</label>
+              <input type="text" id="wrapTag" placeholder="input" maxlength="40" autocomplete="off" spellcheck="false">
+            </div>
+            <p class="hint" id="wrapTagHint"></p>
+          </div>
         </div>
       </section>
 
       <section>
-        <h2>Links and images in text</h2>
-        <div class="row">
-          <label for="includeLinks">Include link URLs</label>
-          <input type="checkbox" id="includeLinks">
+        <h2>Links and images</h2>
+        <div class="opt">
+          <div class="row">
+            <label for="includeLinks">Include link addresses</label>
+            <input type="checkbox" id="includeLinks">
+          </div>
+          <p class="hint">Off: link words only. On: also the web address behind it.</p>
         </div>
-        <div class="row">
-          <label for="includeImages">Include image URLs</label>
-          <input type="checkbox" id="includeImages">
+        <div class="opt">
+          <div class="row">
+            <label for="includeImages">Include image addresses</label>
+            <input type="checkbox" id="includeImages">
+          </div>
+          <p class="hint">Off: images show as [Image: description]. On: address kept too.</p>
         </div>
-        <p class="hint">Off keeps the link text and drops the address; images become [Image: description].</p>
-        <div class="row">
-          <label for="fullSourceUrl">Include full source address</label>
-          <input type="checkbox" id="fullSourceUrl">
+        <div class="opt">
+          <div class="row">
+            <label for="fullSourceUrl">Include full page address</label>
+            <input type="checkbox" id="fullSourceUrl">
+          </div>
+          <p class="hint">Off cuts everything after a ? or #, which can hold private details. Some sites (for example YouTube) need it for the link to work.</p>
         </div>
-        <p class="hint">Each page is written with its address. Off removes everything after ? or #, which can hold tokens or private identifiers. Turn on if a page needs that part to open.</p>
       </section>
 
       <section>
-        <h2>Download</h2>
-        <div class="row">
-          <label for="download">Download files</label>
-          <input type="checkbox" id="download">
-        </div>
-        <div id="downloadSub" class="sub">
+        <h2>Save as a file</h2>
+        <div class="opt">
           <div class="row">
-            <label for="content">Content</label>
-            <select id="content">
-              <option value="cleaned">Cleaned (main content only)</option>
-              <option value="full">Full (entire page)</option>
-            </select>
+            <label for="download">Save a file</label>
+            <input type="checkbox" id="download">
           </div>
-          <p class="hint">The downloaded file is always Markdown. Not used for the clipboard, which is always Cleaned.</p>
-          <div class="row">
-            <label for="destination">Destination folder (inside Downloads)</label>
-            <input type="text" id="destination" placeholder="DD-Captures">
+          <p class="hint">Also saves a Markdown (.md) file in your Downloads folder.</p>
+          <div id="downloadSub" class="sub">
+            <div class="opt">
+              <div class="row">
+                <label for="destination">Folder</label>
+                <input type="text" id="destination" placeholder="dd-captures">
+              </div>
+              <p class="hint">A folder inside Downloads. Empty saves into Downloads.</p>
+            </div>
           </div>
         </div>
       </section>
-
       <div class="actions">
         <button id="save">Save</button>
         <button id="reset" type="button">Restore defaults</button>
         <span id="status" role="status"></span>
       </div>
 
-      <footer>Pages are converted in your browser and are never sent to the developer or an AI service. Distill Down makes no network requests.</footer>
+      <footer>Everything happens in your browser. Nothing is sent to us or to any AI service.</footer>
     </main>
 
     <script src="core.js"></script>

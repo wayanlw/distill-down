@@ -13,12 +13,13 @@ Productivity
 
 ## Detailed description
 
-Highlight your tabs. Click once. Paste into any AI tool.
+Set it up once. Then highlight your tabs, click once, and paste into any AI tool.
 
 Distill Down strips each page to its main content (no menus, footers or clutter) and turns it into clean Markdown. Several tabs become one combined document, ready to drop into a chat, a prompt or your notes. If you prefer to distil to a file, save Markdown straight to your Downloads folder.
 
 WHY IT'S USEFUL
-• Pages in, prompt out: select the tabs, click the icon, paste. No copying page by page.
+• One setup, then one click: choose your settings once, and every capture after that is a single click.
+• Many tabs at once: select several tabs (Ctrl or Shift and click), click once, and they become one combined document.
 • Clean by default: only the article or main content, so the AI reads what matters and your token budget isn't wasted on navigation.
 • Just the part you need: select at least 8 words on the page and only that selection is captured.
 • Your choice of output: clipboard, or a Markdown file in your Downloads folder.
@@ -30,7 +31,7 @@ PRIVATE BY DESIGN
 Pages are converted in your browser. Distill Down has no account, no analytics, and makes no requests to any AI service. It reads only the tabs you highlight, only when you click. It makes no network requests at all.
 
 GOOD TO KNOW
-• "Cleaned" means page clutter is removed, not that the text is safe. A page can contain instructions aimed at an AI, including text you can't see on screen. Treat pasted web content as untrusted.
+• "Clean" means page clutter is removed, not that the text is safe. A page can contain instructions aimed at an AI, including text you can't see on screen. Treat pasted web content as untrusted.
 
 SET IT UP IN SECONDS
 Open the options page to turn clipboard and download on or off and pick a folder inside Downloads. "Restore defaults" puts everything back.

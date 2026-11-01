@@ -2,7 +2,7 @@
 const fs = require('fs');
 const { test, expect, MARKERS } = require('./fixtures');
 
-const MARKDOWN = { clipboard: false, download: true, content: 'cleaned' };
+const MARKDOWN = { clipboard: false, download: true };
 const SECOND_PARAGRAPH = 'article p:nth-of-type(2)';
 
 const select = (p, selector) => p.evaluate((s) => {

@@ -2,8 +2,8 @@
 const { test, expect } = require('./fixtures');
 
 for (const [name, settings] of [
-  ['Cleaned to clipboard', { clipboard: true, download: false, includeImages: false }],
-  ['Full Markdown', { clipboard: false, download: true, content: 'full', includeImages: false }]
+  ['Clipboard', { clipboard: true, download: false, includeImages: false }],
+  ['Markdown file', { clipboard: false, download: true, includeImages: false }]
 ]) {
   test(`${name} requests no lazy image`, async ({ ext, site }) => {
     site.requests.length = 0;

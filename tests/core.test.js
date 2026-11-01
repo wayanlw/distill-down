@@ -50,29 +50,25 @@ test('collision suffix _2, _3 (case-insensitive)', () => {
 });
 
 test('destination sanitising keeps it inside Downloads', () => {
-  assert.equal(WW.sanitiseDestination('DD-Captures'), 'DD-Captures');
+  assert.equal(WW.sanitiseDestination('dd-captures'), 'dd-captures');
   assert.equal(WW.sanitiseDestination('/etc/../x\\y'), 'etc/x/y');
-  assert.equal(WW.sanitiseDestination('..'), 'DD-Captures');
-  assert.equal(WW.sanitiseDestination(''), 'DD-Captures');
+  assert.equal(WW.sanitiseDestination('..'), 'dd-captures');
+  assert.equal(WW.sanitiseDestination(''), 'dd-captures');
   assert.equal(WW.sanitiseSettings({ destination: '' }).destination, '');
-  // Unknown values fall back to the defaults.
-  assert.equal(WW.sanitiseSettings({ content: 'print' }).content, 'cleaned');
-  assert.equal(WW.sanitiseSettings({ content: 'full' }).content, 'full');
 });
 
 test('settings sanitising applies defaults and rejects bad values', () => {
-  const s = WW.sanitiseSettings({ content: 'x', clipboard: 1 });
-  assert.equal(s.content, 'cleaned');
+  const s = WW.sanitiseSettings({ clipboard: 1 });
   assert.equal(s.clipboard, true);
   assert.equal(s.download, false);
-  assert.equal(s.destination, 'DD-Captures');
+  assert.equal(s.destination, 'dd-captures');
 });
 
 test('defaults suit AI use: clipboard on, download off, no link or image URLs', () => {
   const s = WW.sanitiseSettings({});
   assert.deepEqual(
-    { c: s.clipboard, d: s.download, t: s.content, l: s.includeLinks, i: s.includeImages },
-    { c: true, d: false, t: 'cleaned', l: false, i: false }
+    { c: s.clipboard, d: s.download, l: s.includeLinks, i: s.includeImages },
+    { c: true, d: false, l: false, i: false }
   );
 });
 

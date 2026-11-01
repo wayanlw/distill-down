@@ -1,12 +1,11 @@
 // Injected into each tab after lib/Readability.js and lib/turndown.js.
-// Reads window.__wwOpts = { modes: ['cleaned'] | ['full'] | both, useSelection }.
-// Writes window.__wwResult = { title, url, cleaned, full, selection, error }.
+// Reads window.__wwOpts = { useSelection }.
+// Writes window.__wwResult = { title, url, cleaned, selection, error }.
 (function () {
   'use strict';
   const MIN_SELECTION_WORDS = 8;
-  const opts = window.__wwOpts || { modes: ['cleaned'] };
-  const modes = opts.modes || ['cleaned'];
-  const out = { title: document.title || '', url: location.href, cleaned: null, full: null, selection: false, error: null };
+  const opts = window.__wwOpts || {};
+  const out = { title: document.title || '', url: location.href, cleaned: null, selection: false, error: null };
 
   try {
     const td = new TurndownService({
@@ -103,39 +102,17 @@
     if (selected) {
       out.selection = true;
       out.cleaned = selected;
-      out.full = selected;
     }
 
-    // Each mode runs on its own: one failing must not lose the other's result.
-    const failures = [];
-    if (!selected && modes.indexOf('cleaned') !== -1) {
-      try {
-        const article = new Readability(document.cloneNode(true)).parse();
-        if (!article || !article.content) {
-          throw new Error('Could not find main content on this page');
-        }
-        const wrap = inert.createElement('div');
-        wrap.innerHTML = article.content;
-        absolutise(wrap);
-        out.cleaned = td.turndown(wrap);
-        if (!out.cleaned) throw new Error('Could not find main content on this page');
-      } catch (err) {
-        failures.push(err);
-      }
+    if (!selected) {
+      const article = new Readability(document.cloneNode(true)).parse();
+      if (!article || !article.content) throw new Error('Could not find main content on this page');
+      const wrap = inert.createElement('div');
+      wrap.innerHTML = article.content;
+      absolutise(wrap);
+      out.cleaned = td.turndown(wrap);
+      if (!out.cleaned) throw new Error('Could not find main content on this page');
     }
-
-    if (!selected && modes.indexOf('full') !== -1) {
-      try {
-        const body = document.body ? inert.importNode(document.body, true) : inert.createElement('div');
-        absolutise(body);
-        out.full = td.turndown(body);
-      } catch (err) {
-        failures.push(err);
-      }
-    }
-
-    // An error means no requested mode produced a result.
-    if (failures.length && failures.length === modes.length) throw failures[0];
   } catch (err) {
     out.error = String((err && err.message) || err);
   }

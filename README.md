@@ -15,6 +15,12 @@
 
 ---
 
+## Why Distill Down
+
+**1. One setup, then one click.** Choose your settings once. After that, every capture is a single click on the toolbar icon. There is nothing to pick or confirm each time.
+
+**2. Many tabs at once.** Select several tabs (Ctrl or Shift and click), then click once. They become one combined document, so you do not copy page by page.
+
 ## What it does
 
 Highlight some tabs, click the toolbar icon, and Distill Down strips each page to its main content: no menus, footers or clutter. The result is combined Markdown on your clipboard, saved as a Markdown file, or both. Paste it into any AI tool.
@@ -22,7 +28,6 @@ Highlight some tabs, click the toolbar icon, and Distill Down strips each page t
 | | |
 |---|---|
 | **Clean by default** | Only the article or main content, so the AI reads what matters and your token budget is not spent on navigation. |
-| **One click, many tabs** | Select several tabs and they become one combined document. |
 | **Just the part you need** | Select at least 8 words in the active tab and only that selection is captured. The output title gains "(selection)". |
 | **Your choice of output** | Clipboard, a Markdown file, or both. |
 | **Wrap for prompts** | Optional: wrap the clipboard text in a tag you choose, for example `<input>` ... `</input>`, so an AI can tell your pasted page from your instructions. A closing tag inside the page text is escaped so it cannot break the wrapper. |
@@ -48,11 +53,11 @@ If Chrome shows a save dialog for each file, turn off "Ask where to save each fi
 
 Open the extension's options page to turn clipboard and download on or off, pick a folder inside Downloads, and set the link, image and source address options. Changes save immediately. **Restore defaults** resets everything.
 
-Defaults: clipboard on, download off, Cleaned, no link or image URLs, source address without query or fragment.
+Defaults: clipboard on, download off, no link or image URLs, source address without query or fragment.
 
 ## Good to know
 
-- **Cleaned is not a security filter.** A page can carry instructions aimed at an AI, including text hidden from view. Treat pasted web content as untrusted.
+- **Cleaning is not a security filter.** A page can carry instructions aimed at an AI, including text hidden from view. Treat pasted web content as untrusted.
 - **Dynamic pages** are captured as they appear when you click.
 
 ## Develop
