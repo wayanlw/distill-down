@@ -169,12 +169,12 @@ async function resolveImages(urls, pageUrl) {
   return map;
 }
 
-// Injects extraction into one tab and returns { title, url, cleaned, full }.
-async function extractTab(tab, modes) {
+// Injects extraction into one tab and returns { title, url, cleaned, full, selection }.
+async function extractTab(tab, modes, useSelection) {
   if (WW.isRestrictedUrl(tab.url)) throw new WW.SkipError('restricted page (cannot read content)');
   const target = { tabId: tab.id };
   try {
-    await chrome.scripting.executeScript({ target, func: (o) => { window.__wwOpts = o; }, args: [{ modes }] });
+    await chrome.scripting.executeScript({ target, func: (o) => { window.__wwOpts = o; }, args: [{ modes, useSelection }] });
     await chrome.scripting.executeScript({
       target,
       files: ['lib/Readability.js', 'lib/turndown.js', 'extract.js']
@@ -246,11 +246,14 @@ async function run(activeTab) {
     const skipped = [];
     const failures = [];
     const extracted = [];
+    let selectionFound = false;
     for (const tab of needExtract ? tabs : []) {
       try {
-        const res = await extractTab(tab, modes);
+        // Only the active tab: other highlighted tabs are always captured whole.
+        const res = await extractTab(tab, modes, !!activeTab && tab.id === activeTab.id);
+        selectionFound = selectionFound || res.selection;
         extracted.push({
-          title: res.title,
+          title: res.selection ? (res.title || 'Untitled') + ' (selection)' : res.title,
           url: res.url,
           cleaned: res.cleaned,
           content: settings.content === 'full' ? res.full : res.cleaned
@@ -265,6 +268,15 @@ async function run(activeTab) {
     if (needExtract && extracted.length === 0 && !printMode) {
       notify(buildFailText(skipped));
       return;
+    }
+
+    // Page print alone extracts nothing, but its message still mentions a selection.
+    if (printMode && !needExtract && activeTab) {
+      try {
+        selectionFound = (await extractTab(activeTab, [], true)).selection;
+      } catch (err) {
+        // Page print reports its own failures.
+      }
     }
 
     let pagesCopied = 0;
@@ -370,11 +382,16 @@ async function run(activeTab) {
       }
     }
 
+    const notes = [];
+    if (selectionFound && needExtract) notes.push('Selection only from the active tab.');
+    if (selectionFound && printMode) notes.push('Page print ignores the selection and captures the whole page.');
+
     notify(
       WW.buildSummary({
         pagesSaved,
         filesSaved,
         pagesCopied,
+        notes,
         skipped,
         failures
       })

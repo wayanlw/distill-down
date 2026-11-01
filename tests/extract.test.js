@@ -20,6 +20,68 @@ function runExtract(html, url, modes) {
   return w.__wwResult;
 }
 
+function runWithSelection(html, select, modes = ['cleaned']) {
+  const dom = new JSDOM(html, { url: 'https://site.test/post/1', runScripts: 'outside-only', pretendToBeVisual: true });
+  const w = dom.window;
+  select(w);
+  w.__wwOpts = { modes, useSelection: true };
+  w.eval(read('lib/Readability.js'));
+  w.eval(read('lib/turndown.js'));
+  w.eval(read('extract.js'));
+  return w.__wwResult;
+}
+
+const selectAll = (selector) => (w) => w.getSelection().selectAllChildren(w.document.querySelector(selector));
+
+const selectionPage = `<!doctype html><html><head><title>Article One</title></head><body><article>
+  <p id="long">Eight words are exactly enough to count here <a href="/related">with a link</a> and <strong>bold</strong> text.</p>
+  <p id="eight">One two three four five six seven eight</p>
+  <p id="seven">One two three four five six seven</p>
+  <pre id="code"><code>const first = 1; const second = 2; const third = 3; const fourth = 4;</code></pre>
+  <p id="rest">OTHER-PARAGRAPH-TEXT</p>
+  <p id="script">One two three<script>four five six seven eight nine</script></p>
+</article></body></html>`;
+
+test('selection: converted to Markdown instead of the page', () => {
+  const r = runWithSelection(selectionPage, selectAll('#long'));
+  assert.equal(r.selection, true);
+  assert.match(r.cleaned, /\[with a link\]\(https:\/\/site\.test\/related\)/);
+  assert.match(r.cleaned, /\*\*bold\*\*/);
+  assert.doesNotMatch(r.cleaned, /OTHER-PARAGRAPH-TEXT/);
+});
+
+test('selection: applies to Full as well', () => {
+  const r = runWithSelection(selectionPage, selectAll('#long'), ['full']);
+  assert.equal(r.selection, true);
+  assert.doesNotMatch(r.full, /OTHER-PARAGRAPH-TEXT/);
+});
+
+test('selection: eight words count, seven capture the whole page', () => {
+  assert.equal(runWithSelection(selectionPage, selectAll('#eight')).selection, true);
+  assert.equal(runWithSelection(selectionPage, selectAll('#seven')).selection, false);
+});
+
+test('selection: script text does not count towards the words', () => {
+  assert.equal(runWithSelection(selectionPage, selectAll('#script')).selection, false);
+});
+
+test('selection: inside a code block stays a code block', () => {
+  const r = runWithSelection(selectionPage, selectAll('#code code'));
+  assert.match(r.cleaned, /^```/);
+});
+
+test('selection: ignored unless requested', () => {
+  const dom = new JSDOM(fixture, { url: 'https://site.test/post/1', runScripts: 'outside-only', pretendToBeVisual: true });
+  const w = dom.window;
+  selectAll('article p')(w);
+  w.__wwOpts = { modes: ['cleaned'] };
+  w.eval(read('lib/Readability.js'));
+  w.eval(read('lib/turndown.js'));
+  w.eval(read('extract.js'));
+  assert.equal(w.__wwResult.selection, false);
+  assert.match(w.__wwResult.cleaned, /Main Heading/);
+});
+
 const fixture = `<!doctype html><html><head><title>Article One</title></head><body>
 <nav class="site-nav"><a href="/home">HOME-NAV-LINK</a></nav>
 <aside class="ads">BUY-NOW-AD</aside>

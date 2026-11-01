@@ -326,6 +326,7 @@
     if (result.pagesCopied > 0) parts.push('copied ' + plural(result.pagesCopied, 'page') + ' to clipboard');
     let text = parts.length ? parts.join(', ') : 'Nothing was saved';
     text += '.';
+    if (result.notes && result.notes.length) text += ' ' + result.notes.join(' ');
     if (result.skipped && result.skipped.length) {
       text += ' ' + result.skipped.length + ' skipped:';
       for (const s of result.skipped.slice(0, 5)) {

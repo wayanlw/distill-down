@@ -1,11 +1,12 @@
 // Injected into each tab after lib/Readability.js and lib/turndown.js.
-// Reads window.__wwOpts = { modes: ['cleaned'] | ['full'] | both }.
-// Writes window.__wwResult = { title, url, cleaned, full, error }.
+// Reads window.__wwOpts = { modes: ['cleaned'] | ['full'] | both, useSelection }.
+// Writes window.__wwResult = { title, url, cleaned, full, selection, error }.
 (function () {
   'use strict';
+  const MIN_SELECTION_WORDS = 8;
   const opts = window.__wwOpts || { modes: ['cleaned'] };
   const modes = opts.modes || ['cleaned'];
-  const out = { title: document.title || '', url: location.href, cleaned: null, full: null, error: null };
+  const out = { title: document.title || '', url: location.href, cleaned: null, full: null, selection: false, error: null };
 
   try {
     const td = new TurndownService({
@@ -45,9 +46,69 @@
     // loading as soon as it has a src, even if it is never attached.
     const inert = document.implementation.createHTMLDocument('');
 
+    const pathTo = (node) => {
+      const path = [];
+      for (let n = node; n !== document; n = n.parentNode) {
+        if (!n.parentNode) return null; // inside a shadow root
+        path.unshift(Array.prototype.indexOf.call(n.parentNode.childNodes, n));
+      }
+      return path;
+    };
+    const follow = (root, path) => path.reduce((n, i) => n.childNodes[i], root);
+    const countWords = (text) => {
+      const words = new Intl.Segmenter(undefined, { granularity: 'word' }).segment(text);
+      return Array.from(words).filter((w) => w.isWordLike).length;
+    };
+
+    // The selection as Markdown, or null to capture the whole page. The range is rebuilt
+    // on a cloned document because cloning it on the live page would load its images.
+    // Text selected inside a form field has no range contents, so it counts as no selection.
+    const readSelection = () => {
+      const sel = window.getSelection();
+      if (!sel || !sel.rangeCount || sel.isCollapsed) return null;
+      const live = sel.getRangeAt(0);
+      const start = pathTo(live.startContainer);
+      const end = pathTo(live.endContainer);
+      if (!start || !end) return null;
+      const copy = document.cloneNode(true);
+      const range = copy.createRange();
+      range.setStart(follow(copy, start), live.startOffset);
+      range.setEnd(follow(copy, end), live.endOffset);
+
+      const wrap = inert.createElement('div');
+      const contents = inert.importNode(range.cloneContents(), true);
+      const common = range.commonAncestorContainer;
+      const parent = common.nodeType === 1 ? common : common.parentElement;
+      if (parent && parent.closest('pre')) {
+        // A selection inside a code block loses the block; put it back.
+        const pre = inert.createElement('pre');
+        const code = inert.createElement('code');
+        code.appendChild(contents);
+        pre.appendChild(code);
+        wrap.appendChild(pre);
+      } else {
+        wrap.appendChild(contents);
+      }
+      wrap.querySelectorAll('script, style, noscript, template').forEach((n) => n.remove());
+      if (countWords(wrap.textContent) < MIN_SELECTION_WORDS) return null;
+      absolutise(wrap);
+      return td.turndown(wrap) || null;
+    };
+
+    let selected = null;
+    if (opts.useSelection) {
+      // A selection that cannot be read must not lose the page.
+      try { selected = readSelection(); } catch (e) { selected = null; }
+    }
+    if (selected) {
+      out.selection = true;
+      out.cleaned = selected;
+      out.full = selected;
+    }
+
     // Each mode runs on its own: one failing must not lose the other's result.
     const failures = [];
-    if (modes.indexOf('cleaned') !== -1) {
+    if (!selected && modes.indexOf('cleaned') !== -1) {
       try {
         const article = new Readability(document.cloneNode(true)).parse();
         if (!article || !article.content) {
@@ -63,7 +124,7 @@
       }
     }
 
-    if (modes.indexOf('full') !== -1) {
+    if (!selected && modes.indexOf('full') !== -1) {
       try {
         const body = document.body ? inert.importNode(document.body, true) : inert.createElement('div');
         absolutise(body);

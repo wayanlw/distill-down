@@ -8,6 +8,7 @@ Highlight some tabs, click the toolbar icon, and Distill Down strips each page t
 
 - **Clean by default.** Navigation, footers and clutter are removed, so the AI reads the article rather than the page chrome.
 - **One click, many tabs.** Select several tabs and they become one combined document.
+- **Just the part you need.** Select at least 8 words in the active tab and only that selection is captured.
 - **Private.** Pages are converted in your browser. Distill Down makes no network calls to any AI service. The one exception to "no network" is a PDF with images, which downloads those images from their hosts. See [PRIVACY.md](PRIVACY.md).
 - **Your choice of output.** Clipboard, Markdown file, cleaned PDF, or a full page-print PDF. Links and image URLs are optional.
 
