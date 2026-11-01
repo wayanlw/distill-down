@@ -197,27 +197,6 @@ async function extractTab(tab, modes, useSelection) {
   }
 }
 
-// Browser print-to-PDF of the live page via the DevTools protocol.
-// Chrome shows a "debugging this browser" banner while attached.
-async function printTabToPdf(tab) {
-  if (WW.isRestrictedUrl(tab.url)) throw new WW.SkipError('restricted page (cannot print)');
-  // "debugger" is an optional permission, granted from the options page.
-  const granted = await chrome.permissions.contains({ permissions: ['debugger'] });
-  if (!granted) throw new WW.SkipError('Page print needs the debugger permission: choose Page print in settings again');
-  const target = { tabId: tab.id };
-  try {
-    await chrome.debugger.attach(target, '1.3');
-  } catch (err) {
-    throw new WW.SkipError('cannot print this page: ' + String((err && err.message) || err));
-  }
-  try {
-    const res = await chrome.debugger.sendCommand(target, 'Page.printToPDF', { printBackground: true });
-    return WW.base64ToBytes(res.data);
-  } finally {
-    await chrome.debugger.detach(target).catch(() => {});
-  }
-}
-
 async function run(activeTab) {
   if (running) {
     notify('Already processing, please wait');
@@ -235,19 +214,15 @@ async function run(activeTab) {
     const highlighted = await chrome.tabs.query({ highlighted: true, currentWindow: true });
     const tabs = WW.pickTabs(highlighted, activeTab);
 
-    // Page print needs no extraction; it prints the live page.
-    const printMode = behaviour.download && settings.format === 'pdf' && settings.content === 'print';
-    const needExtract = behaviour.clipboard || (behaviour.download && !printMode);
-
     const modes = [];
     if (behaviour.clipboard) modes.push('cleaned');
-    if (behaviour.download && !printMode && !modes.includes(settings.content)) modes.push(settings.content);
+    if (behaviour.download && !modes.includes(settings.content)) modes.push(settings.content);
 
     const skipped = [];
     const failures = [];
     const extracted = [];
     let selectionFound = false;
-    for (const tab of needExtract ? tabs : []) {
+    for (const tab of tabs) {
       try {
         // Only the active tab: other highlighted tabs are always captured whole.
         const res = await extractTab(tab, modes, !!activeTab && tab.id === activeTab.id);
@@ -265,18 +240,9 @@ async function run(activeTab) {
       }
     }
 
-    if (needExtract && extracted.length === 0 && !printMode) {
+    if (extracted.length === 0) {
       notify(buildFailText(skipped));
       return;
-    }
-
-    // Page print alone extracts nothing, but its message still mentions a selection.
-    if (printMode && !needExtract && activeTab) {
-      try {
-        selectionFound = (await extractTab(activeTab, [], true)).selection;
-      } catch (err) {
-        // Page print reports its own failures.
-      }
     }
 
     let pagesCopied = 0;
@@ -310,28 +276,8 @@ async function run(activeTab) {
       }
     }
 
-    // Page print: one PDF per tab, independent of extraction.
-    if (printMode) {
-      const stamp = WW.timestamp(new Date());
-      const taken = new Set();
-      const dest = settings.destination ? settings.destination + '/' : '';
-      for (const tab of tabs) {
-        try {
-          const bytes = await printTabToPdf(tab);
-          const name = WW.uniqueBase(stamp + '_' + WW.sanitiseTitle(tab.title || tab.url), taken) + '.pdf';
-          await downloadBytes(bytes, 'application/pdf', dest + name);
-          pagesSaved += 1;
-          filesSaved += 1;
-        } catch (err) {
-          const reason = err instanceof WW.SkipError ? err.message : 'print failed: ' + String(err && err.message);
-          console.error('[ww] print failed', tab.url, reason);
-          skipped.push({ title: tab.title || tab.url, url: tab.url, reason });
-        }
-      }
-    }
-
     // Download: independent of clipboard result.
-    if (behaviour.download && !printMode) {
+    if (behaviour.download) {
       const stamp = WW.timestamp(new Date());
       const taken = new Set();
       const dest = settings.destination ? settings.destination + '/' : '';
@@ -383,8 +329,7 @@ async function run(activeTab) {
     }
 
     const notes = [];
-    if (selectionFound && needExtract) notes.push('Selection only from the active tab.');
-    if (selectionFound && printMode) notes.push('Page print ignores the selection and captures the whole page.');
+    if (selectionFound) notes.push('Selection only from the active tab.');
 
     notify(
       WW.buildSummary({

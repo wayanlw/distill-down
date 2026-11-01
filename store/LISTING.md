@@ -21,7 +21,7 @@ WHY IT'S USEFUL
 • Pages in, prompt out: select the tabs, click the icon, paste. No copying page by page.
 • Clean by default: only the article or main content, so the AI reads what matters and your token budget isn't wasted on navigation.
 • Just the part you need: select at least 8 words on the page and only that selection is captured.
-• Your choice of output: clipboard, a Markdown file, a cleaned PDF with pictures, or a full page print.
+• Your choice of output: clipboard, a Markdown file, or a cleaned PDF with pictures.
 • Links and image addresses are optional. Leave them out for tight text, or keep them when sources matter.
 • Every page keeps its title and source address. Query strings and fragments are removed unless you turn on the full address.
 
@@ -30,7 +30,7 @@ Pages are converted in your browser. Distill Down has no account, no analytics, 
 
 GOOD TO KNOW
 • "Cleaned" means page clutter is removed, not that the text is safe. A page can contain instructions aimed at an AI, including text you can't see on screen. Treat pasted web content as untrusted.
-• Cleaned PDF supports Western European characters; others print as "?". Use Page print for other scripts or mathematical notation.
+• Cleaned PDF supports Western European characters; others print as "?". Use Markdown for other scripts or mathematical notation.
 
 SET IT UP IN SECONDS
 Open the options page to turn clipboard and download on or off, choose Markdown or PDF, and pick a folder inside Downloads. "Restore defaults" puts everything back.
@@ -53,7 +53,6 @@ Converts the tabs the user highlights into clean Markdown or PDF and copies or s
 - **storage:** Saves the user's settings.
 - **notifications:** Reports completion and skipped tabs.
 - **offscreen:** Needed for clipboard writing and image encoding in a Manifest V3 service worker.
-- **debugger (optional):** Requested only when the user chooses "Page print" PDF.
 - **Remote code:** None. All code ships in the package.
 
 ## Privacy policy URL

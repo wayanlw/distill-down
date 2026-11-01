@@ -79,17 +79,6 @@ test('capturing a selection does not make the page load lazy images', async ({ e
   expect(site.requests.slice(before)).not.toContain('/vector.svg');
 });
 
-test('Page print ignores a selection and says so', async ({ ext }) => {
-  await ext.setSettings({ clipboard: false, download: true, format: 'pdf', content: 'print' });
-  const p = await ext.open('/one');
-  await select(p, SECOND_PARAGRAPH);
-
-  const note = await ext.run(p);
-
-  expect(note).toMatch(/^Saved 1 page \(1 file\)\./);
-  expect(note).toContain('Page print ignores the selection');
-});
-
 test('the clipboard gets the selection with a marked source line', async ({ ext }) => {
   await ext.setSettings({ clipboard: true, download: false });
   const p = await ext.open('/one');

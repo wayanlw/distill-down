@@ -7,7 +7,7 @@
     clipboard: true,
     download: false,
     format: 'markdown', // 'markdown' | 'pdf'
-    content: 'cleaned', // 'cleaned' | 'full' (markdown only) | 'print' (pdf only: browser print-to-PDF)
+    content: 'cleaned', // 'cleaned' | 'full' (markdown only)
     destination: 'DD-Captures',
     includeLinks: false, // false keeps link text, drops the URL (Markdown, clipboard, text PDF)
     includeImages: false, // false turns images into [Image: alt]; no pictures in text PDF
@@ -118,17 +118,10 @@
     s.includeLinks = !!s.includeLinks;
     s.includeImages = !!s.includeImages;
     s.fullSourceUrl = !!s.fullSourceUrl;
-    // Legacy value from an earlier build: format 'print' became PDF + content 'print'.
-    if (s.format === 'print') {
-      s.format = 'pdf';
-      s.content = 'print';
-    }
     if (s.format !== 'markdown' && s.format !== 'pdf') s.format = DEFAULT_SETTINGS.format;
-    // PDF has no Full: Markdown Full covers debugging, Page print covers the whole page.
-    // A saved PDF + Full falls back to Cleaned.
-    const printOk = s.content === 'print' && s.format === 'pdf';
+    // PDF has no Full. A saved PDF + Full falls back to Cleaned.
     const fullOk = s.content === 'full' && s.format === 'markdown';
-    if (s.content !== 'cleaned' && !fullOk && !printOk) s.content = DEFAULT_SETTINGS.content;
+    if (s.content !== 'cleaned' && !fullOk) s.content = DEFAULT_SETTINGS.content;
     // An explicit empty string means "save straight into Downloads".
     s.destination = s.destination === '' ? '' : sanitiseDestination(s.destination);
     return s;

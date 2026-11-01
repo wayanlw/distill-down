@@ -28,7 +28,6 @@ By default, the source address in clipboard text and files has its query string 
 | Storage | Remember your settings. |
 | Notifications | Tell you when a capture finishes or a tab was skipped. |
 | Offscreen documents | Copy to the clipboard and encode images in a hidden page, as Chrome requires. |
-| Debugger (optional) | Requested only if you choose the "Page print" PDF option, to print the page as the browser would. Chrome shows its "debugging this browser" banner while this runs. |
 
 ## Contact
 [Add a support email or issue tracker URL before publishing.]

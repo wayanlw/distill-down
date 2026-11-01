@@ -24,7 +24,7 @@ Highlight some tabs, click the toolbar icon, and Distill Down strips each page t
 | **Clean by default** | Only the article or main content, so the AI reads what matters and your token budget is not spent on navigation. |
 | **One click, many tabs** | Select several tabs and they become one combined document. |
 | **Just the part you need** | Select at least 8 words in the active tab and only that selection is captured. The output title gains "(selection)". |
-| **Your choice of output** | Clipboard, Markdown file, Cleaned PDF, or a Page print PDF of the page as displayed. |
+| **Your choice of output** | Clipboard, Markdown file, or Cleaned PDF with pictures. |
 | **Links and images are optional** | Leave them out for tight text, or keep link and image addresses when sources matter. |
 | **Source address is safe by default** | Query strings and fragments are removed, since they can hold tokens. One toggle brings the full address back. |
 
@@ -52,8 +52,7 @@ Defaults: clipboard on, download off, Markdown, Cleaned, no link or image URLs, 
 ## Good to know
 
 - **Cleaned is not a security filter.** A page can carry instructions aimed at an AI, including text hidden from view. Treat pasted web content as untrusted.
-- **Cleaned PDF** prints characters outside Western European text as "?". Use Page print for other scripts or mathematical notation. SVG images are not included in Cleaned PDFs.
-- **Page print** uses Chrome's debugger permission, requested only when you choose it, and ignores any text selection.
+- **Cleaned PDF** prints characters outside Western European text as "?". Use Markdown for other scripts or mathematical notation. SVG images are not included in Cleaned PDFs.
 - **Dynamic pages** are captured as they appear when you click.
 
 ## Develop

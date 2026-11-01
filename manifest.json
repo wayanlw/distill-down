@@ -5,7 +5,6 @@
   "description": "Turn highlighted tabs into clean Markdown or PDF for your AI tools. Converted locally; PDFs with images contact image hosts.",
   "minimum_chrome_version": "116",
   "permissions": ["tabs", "scripting", "downloads", "notifications", "storage", "offscreen", "clipboardWrite"],
-  "optional_permissions": ["debugger"],
   "host_permissions": ["<all_urls>"],
   "background": {
     "service_worker": "background.js"
