@@ -25,6 +25,7 @@ Highlight some tabs, click the toolbar icon, and Distill Down strips each page t
 | **One click, many tabs** | Select several tabs and they become one combined document. |
 | **Just the part you need** | Select at least 8 words in the active tab and only that selection is captured. The output title gains "(selection)". |
 | **Your choice of output** | Clipboard, a Markdown file, or both. |
+| **Wrap for prompts** | Optional: wrap the clipboard text in a tag you choose, for example `<input>` ... `</input>`, so an AI can tell your pasted page from your instructions. A closing tag inside the page text is escaped so it cannot break the wrapper. |
 | **Links and images are optional** | Leave them out for tight text, or keep link and image addresses when sources matter. |
 | **Source address is safe by default** | Query strings and fragments are removed, since they can hold tokens. One toggle brings the full address back. |
 

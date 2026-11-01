@@ -94,6 +94,8 @@ const PAGES = {
     inside: '<p><img src="/big.png" alt="Big gradient"></p>'
   }),
   // Lazy-loaded style: src is a 1px placeholder, the real picture is in data-src.
+  // The page text itself contains a closing input tag.
+  '/closingtag': page('WW Closing Tag Page', 'WW marker with a literal &lt;/input&gt; tag in it.'),
   '/nav': page('WW Nav Page', MARKERS.nav, {
     before: '<nav><ul><li><a href="/x">NAVTEXT-MENU-ITEM</a></li><li><a href="/y">NAVTEXT-OTHER</a></li></ul></nav>',
     after: '<footer><p>FOOTERTEXT-COPYRIGHT</p></footer>'

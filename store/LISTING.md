@@ -22,6 +22,7 @@ WHY IT'S USEFUL
 • Clean by default: only the article or main content, so the AI reads what matters and your token budget isn't wasted on navigation.
 • Just the part you need: select at least 8 words on the page and only that selection is captured.
 • Your choice of output: clipboard, or a Markdown file in your Downloads folder.
+• Wrap for prompts: optionally wrap the copied text in a tag you choose, such as <input>, so an AI can tell the page from your instructions.
 • Links and image addresses are optional. Leave them out for tight text, or keep them when sources matter.
 • Every page keeps its title and source address. Query strings and fragments are removed unless you turn on the full address.
 

@@ -183,13 +183,13 @@ async function run(activeTab) {
         if (clipPages.length === 0) {
           failures.push('Clipboard not changed: no main content found.');
         } else {
-          await copyToClipboard(
-            WW.buildClipboardText(clipPages.map((p) => ({
-              title: p.title,
-              url: WW.formatSourceUrl(p.url, settings.fullSourceUrl),
-              markdown: WW.stripUrls(p.cleaned, settings)
-            })))
-          );
+          let clipText = WW.buildClipboardText(clipPages.map((p) => ({
+            title: p.title,
+            url: WW.formatSourceUrl(p.url, settings.fullSourceUrl),
+            markdown: WW.stripUrls(p.cleaned, settings)
+          })));
+          if (settings.wrapClipboard) clipText = WW.wrapClipboardText(clipText, settings.wrapTag);
+          await copyToClipboard(clipText);
           pagesCopied = clipPages.length;
           if (clipPages.length < extracted.length) {
             const missing = extracted.length - clipPages.length;

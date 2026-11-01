@@ -10,7 +10,9 @@
     destination: 'DD-Captures',
     includeLinks: false, // false keeps link text, drops the URL (Markdown file and clipboard)
     includeImages: false, // false turns images into [Image: alt]
-    fullSourceUrl: false // false drops the query and fragment from the source address
+    fullSourceUrl: false, // false drops the query and fragment from the source address
+    wrapClipboard: false, // true wraps the clipboard text in <wrapTag>...</wrapTag>
+    wrapTag: 'input'
   });
 
   const RESTRICTED_PREFIXES = [
@@ -110,6 +112,11 @@
     return joined || DEFAULT_SETTINGS.destination;
   }
 
+  // A tag name: starts with a letter or underscore, then letters, digits, hyphens or underscores.
+  function isValidTagName(name) {
+    return /^[A-Za-z_][A-Za-z0-9_-]{0,39}$/.test(String(name));
+  }
+
   function sanitiseSettings(raw) {
     const s = Object.assign({}, DEFAULT_SETTINGS, raw || {});
     s.clipboard = !!s.clipboard;
@@ -117,6 +124,9 @@
     s.includeLinks = !!s.includeLinks;
     s.includeImages = !!s.includeImages;
     s.fullSourceUrl = !!s.fullSourceUrl;
+    s.wrapClipboard = !!s.wrapClipboard;
+    // Empty or invalid falls back to the default.
+    s.wrapTag = isValidTagName(String(s.wrapTag).trim()) ? String(s.wrapTag).trim() : DEFAULT_SETTINGS.wrapTag;
     if (s.content !== 'cleaned' && s.content !== 'full') s.content = DEFAULT_SETTINGS.content;
     // An explicit empty string means "save straight into Downloads".
     s.destination = s.destination === '' ? '' : sanitiseDestination(s.destination);
@@ -193,6 +203,16 @@
       .join('\n');
   }
 
+  // The whole clipboard text inside one wrapper, each tag on its own line. A closing tag
+  // that appears in the page text gets a backslash (</tag> becomes <\/tag>), so the page
+  // cannot end the wrapper early. Only the content is changed, never the wrapper.
+  function wrapClipboardText(text, tag) {
+    const name = isValidTagName(String(tag).trim()) ? String(tag).trim() : DEFAULT_SETTINGS.wrapTag;
+    const closing = new RegExp('<(?=/\\s*' + name + '(?=[\\s/>]|$))', 'gi');
+    const body = String(text || '').replace(closing, '<\\').trim();
+    return '<' + name + '>\n' + body + '\n</' + name + '>\n';
+  }
+
   function plural(n, word) {
     return n + ' ' + word + (n === 1 ? '' : 's');
   }
@@ -249,6 +269,8 @@
     buildPageMarkdown,
     buildMarkdownFile,
     buildClipboardText,
+    isValidTagName,
+    wrapClipboardText,
     buildSummary,
     bytesToBase64,
     utf8Bytes

@@ -145,3 +145,39 @@ test('page and clipboard text use tidied Markdown', () => {
   assert.equal(WW.buildPageMarkdown(page), '# T\n\nA\n\nB\n');
   assert.equal(WW.buildClipboardText([page]), '---\nSource: T\n---\nA\n\nB\n');
 });
+
+test('tag names: letters, digits, hyphen and underscore, starting with a letter or underscore', () => {
+  for (const ok of ['input', 'doc', 'my-tag', '_x', 'A1', 'x'.repeat(40)]) assert.equal(WW.isValidTagName(ok), true, ok);
+  for (const bad of ['', '1a', 'a b', 'a>', 'a/b', '<x>', 'a.b', 'a:b', '-a', 'x'.repeat(41)]) assert.equal(WW.isValidTagName(bad), false, bad);
+});
+
+test('wrapper settings: off by default, tag falls back to input when empty or invalid', () => {
+  const d = WW.sanitiseSettings({});
+  assert.equal(d.wrapClipboard, false);
+  assert.equal(d.wrapTag, 'input');
+  assert.equal(WW.sanitiseSettings({ wrapClipboard: 1 }).wrapClipboard, true);
+  assert.equal(WW.sanitiseSettings({ wrapTag: '' }).wrapTag, 'input');
+  assert.equal(WW.sanitiseSettings({ wrapTag: '   ' }).wrapTag, 'input');
+  assert.equal(WW.sanitiseSettings({ wrapTag: 'bad tag' }).wrapTag, 'input');
+  assert.equal(WW.sanitiseSettings({ wrapTag: '  doc ' }).wrapTag, 'doc');
+});
+
+test('wrapper: one wrapper on its own lines around the whole text', () => {
+  assert.equal(WW.wrapClipboardText('---\nSource: T\n---\nBody\n', 'input'), '<input>\n---\nSource: T\n---\nBody\n</input>\n');
+  assert.equal(WW.wrapClipboardText('Body\n', 'my-doc'), '<my-doc>\nBody\n</my-doc>\n');
+  assert.equal(WW.wrapClipboardText('Body\n', ''), '<input>\nBody\n</input>\n');
+  assert.equal(WW.wrapClipboardText('Body\n', 'bad tag'), '<input>\nBody\n</input>\n');
+});
+
+test('wrapper: a closing tag inside the text is escaped, so the wrapper cannot end early', () => {
+  const out = WW.wrapClipboardText('a </input> b </INPUT > c </ input> d\n', 'input');
+  assert.equal(out, '<input>\na <\\/input> b <\\/INPUT > c <\\/ input> d\n</input>\n');
+  assert.equal(out.match(/<\/input>/gi).length, 1);
+  // Other tags, opening tags and longer names are left alone.
+  assert.equal(
+    WW.wrapClipboardText('<input> </inputs> </div> </doc>\n', 'input'),
+    '<input>\n<input> </inputs> </div> </doc>\n</input>\n'
+  );
+  // Only the chosen tag is escaped.
+  assert.equal(WW.wrapClipboardText('</doc> </input>\n', 'doc'), '<doc>\n<\\/doc> </input>\n</doc>\n');
+});
