@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "license": "MIT",
-  "description": "Chrome MV3 extension: save highlighted tabs as Markdown/PDF and copy to clipboard",
+  "description": "Chrome MV3 extension: turn highlighted tabs into clean Markdown for AI tools, on the clipboard or as a file",
   "scripts": {
     "test": "node --test tests/",
     "e2e": "playwright test",

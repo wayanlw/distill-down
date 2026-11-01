@@ -30,7 +30,7 @@ Highlight some tabs, click the toolbar icon, and Distill Down strips each page t
 | **Clean by default** | Only the article or main content, so the AI reads what matters and your token budget is not spent on navigation. |
 | **Just the part you need** | Select at least 8 words in the active tab and only that selection is captured. The output title gains "(selection)". |
 | **Your choice of output** | Clipboard, a Markdown file, or both. |
-| **Wrap for prompts** | Optional: wrap the clipboard text in a tag you choose, for example `<input>` ... `</input>`, so an AI can tell your pasted page from your instructions. A closing tag inside the page text is escaped so it cannot break the wrapper. |
+| **Wrap for prompts** | Optional "Add a label around it": wraps the clipboard text in a tag you name, for example `<input>` ... `</input>`, so an AI can tell your pasted page from your instructions. A closing tag inside the page text is escaped so it cannot break the wrapper. |
 | **Links and images are optional** | Leave them out for tight text, or keep link and image addresses when sources matter. |
 | **Source address is safe by default** | Query strings and fragments are removed, since they can hold tokens. One toggle brings the full address back. |
 
@@ -51,7 +51,7 @@ If Chrome shows a save dialog for each file, turn off "Ask where to save each fi
 
 ## Settings
 
-Open the extension's options page to turn clipboard and download on or off, pick a folder inside Downloads, and set the link, image and source address options. Changes save immediately. **Restore defaults** resets everything.
+Open the extension's options page to turn clipboard and file saving on or off, choose a folder inside Downloads, add a label around the clipboard text, and set the link, image and source address options. Changes save immediately. **Restore defaults** resets everything.
 
 Defaults: clipboard on, download off, no link or image URLs, source address without query or fragment.
 
