@@ -39,7 +39,11 @@ test('Restore defaults resets the form and the stored settings', async ({ ext })
   await page.goto(`chrome-extension://${ext.worker.url().split('/')[2]}/options.html`);
   await page.check('#download');
   await page.check('#includeLinks');
+  await page.check('#fullSourceUrl');
   await page.selectOption('#format', 'pdf');
+  await page.click('#save');
+  await expect(page.locator('#status')).toHaveText('Saved');
+  expect(await ext.worker.evaluate(() => chrome.storage.local.get('fullSourceUrl'))).toEqual({ fullSourceUrl: true });
   await page.click('#reset');
   await expect(page.locator('#status')).toHaveText('Saved');
 
@@ -47,7 +51,8 @@ test('Restore defaults resets the form and the stored settings', async ({ ext })
   await expect(page.locator('#download')).not.toBeChecked();
   await expect(page.locator('#includeLinks')).not.toBeChecked();
   await expect(page.locator('#includeImages')).not.toBeChecked();
+  await expect(page.locator('#fullSourceUrl')).not.toBeChecked();
   await expect(page.locator('#format')).toHaveValue('markdown');
   const stored = await ext.worker.evaluate(() => chrome.storage.local.get(null));
-  expect(stored).toMatchObject({ clipboard: true, download: false, includeLinks: false, includeImages: false });
+  expect(stored).toMatchObject({ clipboard: true, download: false, includeLinks: false, includeImages: false, fullSourceUrl: false });
 });

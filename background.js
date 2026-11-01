@@ -282,7 +282,7 @@ async function run(activeTab) {
           await copyToClipboard(
             WW.buildClipboardText(clipPages.map((p) => ({
               title: p.title,
-              url: WW.formatSourceUrl(p.url, settings.sourceUrl),
+              url: WW.formatSourceUrl(p.url, settings.fullSourceUrl),
               markdown: WW.stripUrls(p.cleaned, settings)
             })))
           );
@@ -340,7 +340,7 @@ async function run(activeTab) {
             const name = WW.uniqueBase(base, taken) + '.md';
             const text = WW.buildMarkdownFile(pages.map((p) => ({
               title: p.title,
-              url: WW.formatSourceUrl(p.url, settings.sourceUrl),
+              url: WW.formatSourceUrl(p.url, settings.fullSourceUrl),
               markdown: WW.stripUrls(p.content, settings)
             })));
             await downloadBytes(WW.utf8Bytes(text), 'text/markdown', dest + name);
@@ -358,7 +358,7 @@ async function run(activeTab) {
             // Images off: they become "[Image: alt]" text, so none are fetched or embedded.
             const md = WW.stripUrls(p.content, settings);
             const images = settings.includeImages ? await resolveImages(WWPdf.collectImageUrls(md), p.url) : new Map();
-            const bytes = await WWPdf.buildPdf(p.title, WW.formatSourceUrl(p.url, settings.sourceUrl), md, images);
+            const bytes = await WWPdf.buildPdf(p.title, WW.formatSourceUrl(p.url, settings.fullSourceUrl), md, images);
             await downloadBytes(bytes, 'application/pdf', dest + name);
             pagesSaved += 1;
             filesSaved += 1;

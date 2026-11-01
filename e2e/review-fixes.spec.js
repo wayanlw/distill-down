@@ -104,23 +104,18 @@ test('a stuck decode closes the offscreen document and the next image still embe
   expect(pdf.match(/\/Subtype \/Image/g)).toHaveLength(1);
 });
 
-test('source address: query removed by default, full and none on request', async ({ ext }) => {
+test('source address: query removed by default, full on request', async ({ ext }) => {
   const p = await ext.open('/one?token=SECRET123');
 
   await ext.setSettings({ clipboard: true, download: false });
   await ext.run(p);
-  let text = await ext.readClipboard(p);
+  const text = await ext.readClipboard(p);
   expect(text).toContain('/one\n');
   expect(text).not.toContain('SECRET123');
 
-  await ext.setSettings({ clipboard: true, download: false, sourceUrl: 'full' });
+  await ext.setSettings({ clipboard: true, download: false, fullSourceUrl: true });
   await ext.run(p);
   expect(await ext.readClipboard(p)).toContain('SECRET123');
-
-  await ext.setSettings({ clipboard: true, download: false, sourceUrl: 'none' });
-  await ext.run(p);
-  text = await ext.readClipboard(p);
-  expect(text).toMatch(/^---\nSource: WW Page One\n---\n/);
 });
 
 test('an interrupted download is reported as a failure, not as saved', async ({ ext }) => {

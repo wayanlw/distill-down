@@ -16,7 +16,7 @@ Distill Down makes no requests to any AI service, analytics service or server ru
 The one exception is optional. When you save a PDF with "Include image URLs" turned on, the extension requests the page's images directly from the sites that host them, without cookies. These are new requests made at the time of export, and those sites can see them and your IP address. They can include images your browser had not yet loaded, such as lazy-loaded ones. Images that redirect elsewhere are not followed. A public page's images are not requested from recognised private-network addresses. This is partial protection, not a network boundary: the check uses the address's name, so a public name that points to a private address is not detected.
 
 ## What goes into your output
-By default, the source address in clipboard text and files has its query string and fragment removed, because they can hold tokens or private identifiers. You can choose the full address or none in settings. Whatever you paste or upload elsewhere is then subject to that service's own terms.
+By default, the source address in clipboard text and files has its query string and fragment removed, because they can hold tokens or private identifiers. You can turn on the full address in settings. Whatever you paste or upload elsewhere is then subject to that service's own terms.
 
 ## Permissions, and why
 | Permission | Why |

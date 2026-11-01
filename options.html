@@ -157,14 +157,10 @@
         </div>
         <p class="hint">Off keeps the link text and drops the address; images become [Image: description]. In a PDF, off also means no pictures are embedded. Does not affect Page print.</p>
         <div class="row">
-          <label for="sourceUrl">Source address</label>
-          <select id="sourceUrl">
-            <option value="trimmed">Without query or fragment</option>
-            <option value="full">Full address</option>
-            <option value="none">Leave out</option>
-          </select>
+          <label for="fullSourceUrl">Include full source address</label>
+          <input type="checkbox" id="fullSourceUrl">
         </div>
-        <p class="hint">The page address written with each page. Everything after ? or # can hold tokens or private identifiers. Does not affect Page print.</p>
+        <p class="hint">Each page is written with its address. Off removes everything after ? or #, which can hold tokens or private identifiers. Turn on if a page needs that part to open. Does not affect Page print.</p>
       </section>
 
       <section>

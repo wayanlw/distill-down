@@ -10,7 +10,7 @@ function readForm() {
     destination: $('destination').value,
     includeLinks: $('includeLinks').checked,
     includeImages: $('includeImages').checked,
-    sourceUrl: $('sourceUrl').value
+    fullSourceUrl: $('fullSourceUrl').checked
   };
 }
 
@@ -22,7 +22,7 @@ function applyForm(s) {
   $('destination').value = s.destination;
   $('includeLinks').checked = s.includeLinks;
   $('includeImages').checked = s.includeImages;
-  $('sourceUrl').value = s.sourceUrl;
+  $('fullSourceUrl').checked = s.fullSourceUrl;
   // Page print exists only for PDF; Full only for Markdown.
   const printOpt = $('content').querySelector('option[value="print"]');
   printOpt.disabled = printOpt.hidden = s.format !== 'pdf';

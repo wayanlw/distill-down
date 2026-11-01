@@ -11,7 +11,7 @@
     destination: 'DD-Captures',
     includeLinks: false, // false keeps link text, drops the URL (Markdown, clipboard, text PDF)
     includeImages: false, // false turns images into [Image: alt]; no pictures in text PDF
-    sourceUrl: 'trimmed' // 'trimmed' (no query or fragment) | 'full' | 'none'
+    fullSourceUrl: false // false drops the query and fragment from the source address
   });
 
   const RESTRICTED_PREFIXES = [
@@ -117,6 +117,7 @@
     s.download = !!s.download;
     s.includeLinks = !!s.includeLinks;
     s.includeImages = !!s.includeImages;
+    s.fullSourceUrl = !!s.fullSourceUrl;
     // Legacy value from an earlier build: format 'print' became PDF + content 'print'.
     if (s.format === 'print') {
       s.format = 'pdf';
@@ -130,15 +131,13 @@
     if (s.content !== 'cleaned' && !fullOk && !printOk) s.content = DEFAULT_SETTINGS.content;
     // An explicit empty string means "save straight into Downloads".
     s.destination = s.destination === '' ? '' : sanitiseDestination(s.destination);
-    if (!['trimmed', 'full', 'none'].includes(s.sourceUrl)) s.sourceUrl = DEFAULT_SETTINGS.sourceUrl;
     return s;
   }
 
   // The page address as written into output. Queries and fragments can hold tokens.
-  function formatSourceUrl(url, mode) {
-    if (mode === 'none') return '';
-    if (mode === 'full') return String(url || '');
-    return String(url || '').split(/[?#]/)[0];
+  function formatSourceUrl(url, full) {
+    const address = String(url || '');
+    return full ? address : address.split(/[?#]/)[0];
   }
 
   // Loopback, link-local, private and special-use ranges and intranet-style names.

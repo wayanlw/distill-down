@@ -22,7 +22,7 @@ WHY IT'S USEFUL
 • Clean by default: only the article or main content, so the AI reads what matters and your token budget isn't wasted on navigation.
 • Your choice of output: clipboard, a Markdown file, a cleaned PDF with pictures, or a full page print.
 • Links and image addresses are optional. Leave them out for tight text, or keep them when sources matter.
-• Every page keeps its title and, unless you turn it off, its source address. Query strings and fragments are removed by default.
+• Every page keeps its title and source address. Query strings and fragments are removed unless you turn on the full address.
 
 PRIVATE BY DESIGN
 Pages are converted in your browser. Distill Down has no account, no analytics, and makes no requests to any AI service. It reads only the tabs you highlight, only when you click. The one network use is optional: a PDF with images downloads those images from the sites that host them.

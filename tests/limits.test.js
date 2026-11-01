@@ -5,14 +5,14 @@ const fs = require('fs');
 const path = require('path');
 const WW = require('../core.js');
 
-test('source address: trimmed by default, full and none on request', () => {
+test('source address: query and fragment removed by default, full on request', () => {
   const url = 'https://x.test/reset?token=abc#frag';
-  assert.equal(WW.DEFAULT_SETTINGS.sourceUrl, 'trimmed');
-  assert.equal(WW.formatSourceUrl(url, 'trimmed'), 'https://x.test/reset');
-  assert.equal(WW.formatSourceUrl('https://x.test/a#t=1?b', 'trimmed'), 'https://x.test/a');
-  assert.equal(WW.formatSourceUrl(url, 'full'), url);
-  assert.equal(WW.formatSourceUrl(url, 'none'), '');
-  assert.equal(WW.sanitiseSettings({ sourceUrl: 'bad' }).sourceUrl, 'trimmed');
+  assert.equal(WW.DEFAULT_SETTINGS.fullSourceUrl, false);
+  assert.equal(WW.formatSourceUrl(url, false), 'https://x.test/reset');
+  assert.equal(WW.formatSourceUrl('https://x.test/a#t=1?b', false), 'https://x.test/a');
+  assert.equal(WW.formatSourceUrl(url, true), url);
+  assert.equal(WW.sanitiseSettings({}).fullSourceUrl, false);
+  assert.equal(WW.sanitiseSettings({ fullSourceUrl: true }).fullSourceUrl, true);
 });
 
 test('no source address leaves no URL in Markdown or clipboard text', () => {
