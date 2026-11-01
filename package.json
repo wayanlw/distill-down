@@ -1,5 +1,5 @@
 {
-  "name": "ww-chrome-ai-addon",
+  "name": "distill-down",
   "version": "0.1.0",
   "private": true,
   "description": "Chrome MV3 extension: save highlighted tabs as Markdown/PDF and copy to clipboard",
