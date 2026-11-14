@@ -49,6 +49,16 @@ Distill Down is not on the Chrome Web Store yet. To run it from source:
 
 If Chrome shows a save dialog for each file, turn off "Ask where to save each file before downloading" in the browser's download settings.
 
+## Publish the public site
+
+The `docs/` directory is a self-contained static site for GitHub Pages. After this repository is on GitHub:
+
+1. Open **Settings → Pages**.
+2. Under **Build and deployment**, choose **Deploy from a branch**.
+3. Select the default branch and the `/docs` folder, then choose **Save**.
+
+The site will be available at [wayanlw.github.io/distill-down](https://wayanlw.github.io/distill-down/), with the public privacy policy at [wayanlw.github.io/distill-down/privacy.html](https://wayanlw.github.io/distill-down/privacy.html).
+
 ## Settings
 
 Open the extension's options page to turn clipboard and file saving on or off, choose a folder inside Downloads, add a label around the clipboard text, and set the link, image and source address options. Changes save immediately. **Restore defaults** resets everything.

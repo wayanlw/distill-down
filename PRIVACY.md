@@ -28,7 +28,7 @@ By default, the source address in clipboard text and files has its query string 
 | Offscreen documents | Copy to the clipboard and create files in a hidden page, as Chrome requires. |
 
 ## Contact
-[Add a support email or issue tracker URL before publishing.]
+For support or privacy questions, open an issue in the [Distill Down issue tracker](https://github.com/wayanlw/distill-down/issues).
 
 ## Changes
 If this policy changes, the new version will be published here with a new effective date.
